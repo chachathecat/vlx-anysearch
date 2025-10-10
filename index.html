@@ -1,77 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Visual Lexicon – Mini</title>
-  <style>
-    :root{ --vlx-accent:#111; --vlx-blue1:#2A6EF2; --vlx-blue2:#6B8CFF; --vlx-muted:#666; --vlx-border:#e9e9ee; --vlx-bg:#fafafa; --vlx-chip:#f5f6f8; --vlx-radius:16px; --vlx-shadow:0 6px 18px rgba(0,0,0,.06); }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";color:#0f172a;background:#fff}
-    .vlx-wrap{max-width:860px;margin:0 auto;padding:16px}
-    .vlx-row{display:flex;gap:10px;align-items:flex-start}
-    .vlx-input{flex:1;padding:14px 16px;border:1px solid var(--vlx-border);border-radius:14px;font-size:16px;background:#fff;width:100%}
-    .vlx-btn{padding:12px 16px;border:0;border-radius:14px;color:#fff;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));box-shadow:var(--vlx-shadow)}
-    .vlx-status{margin:10px 2px;color:var(--vlx-muted);font-size:14px}
-    .vlx-card{display:none;border:1px solid var(--vlx-border);border-radius:var(--vlx-radius);padding:18px;background:#fff;box-shadow:var(--vlx-shadow)}
-    .vlx-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-    .vlx-head h2{margin:0;font-size:22px}
-    .vlx-ipa{color:var(--vlx-muted)}
-    .vlx-section{margin-top:12px}
-    .vlx-col2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .vlx-chip{display:inline-block;background:var(--vlx-chip);border-radius:999px;padding:4px 10px;margin:2px;font-size:13px}
-    .vlx-small{color:var(--vlx-muted);font-size:14px;line-height:1.55}
-    .vlx-list{margin:6px 0 0 0;padding-left:18px}
-    .vlx-imggrid{display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:12px;margin-top:8px}
-    .vlx-imgbox{aspect-ratio:1/1;width:100%;border-radius:12px;overflow:hidden;background:var(--vlx-bg);border:1px solid var(--vlx-border);position:relative}
-    .vlx-imgbox img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
-    .vlx-caption{color:#888;font-size:12px;margin-top:6px}
-    .vlx-spin{display:none;width:18px;height:18px;border:2px solid #ddd;border-top-color:var(--vlx-blue1);border-radius:50%;animation:vlx-rot .9s linear infinite}
-    @keyframes vlx-rot{to{transform:rotate(360deg)}}
-    @media (max-width:720px){ .vlx-imggrid{ grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)) } }
-    @media (max-width:420px){
-      .vlx-imggrid{ grid-template-columns:repeat(2, 1fr) }
-      .vlx-imggrid>.vlx-imgbox:last-child:nth-child(odd){ grid-column:1/-1;justify-self:center;max-width:260px;width:100% }
-    }
-    .vlx-input-wrap{position:relative;flex:1}
-    .vlx-suggest{position:absolute;top:100%;left:0;right:0;margin-top:6px;background:#fff;border:1px solid var(--vlx-border);border-radius:12px;box-shadow:var(--vlx-shadow);max-height:260px;overflow:auto;z-index:50;display:none}
-    .vlx-suggest ul{list-style:none;margin:0;padding:6px}
-    .vlx-suggest li{padding:10px 12px;cursor:pointer;border-radius:8px;display:flex;justify-content:space-between;gap:10px}
-    .vlx-suggest li:hover,.vlx-suggest li.active{background:var(--vlx-chip)}
-    .vlx-sug-roman{color:#999;font-size:12px;white-space:nowrap}
-    .vlx-langbar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
-    .vlx-langbtn{padding:6px 10px;border-radius:999px;border:1px solid var(--vlx-border);background:#fff;cursor:pointer;font-size:12px}
-    .vlx-langbtn.active{background:var(--vlx-blue2);color:#fff;border-color:transparent}
-    .vlx-transbox{border:1px solid var(--vlx-border);border-radius:12px;padding:10px;background:#fff}
-    .vlx-3d{border:1px solid var(--vlx-border);border-radius:12px;background:var(--vlx-bg);height:360px;min-height:320px;overflow:hidden;position:relative}
-    .vlx-3d::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0b0f17,#101726,#0b0f17);background-size:200% 100%;animation:vlx-shimmer 1.6s linear infinite;opacity:0;transition:opacity .25s ease}
-    .vlx-status.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
-    .vlx-3d.loading::before{opacity:.8}
-    @keyframes vlx-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-    .vlx-hintwrap{position:absolute;inset:0;pointer-events:none}
-    .vlx-notice{position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:10px;background:rgba(15,23,42,.92);color:#e6eefc;border:1px solid rgba(148,163,184,.25);padding:10px 12px;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.25);backdrop-filter:blur(6px);pointer-events:auto;font-size:12px;line-height:1.4}
-    .vlx-notice .vlx-dot{width:8px;height:8px;border-radius:999px;background:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.25)}
-    .vlx-notice button{border:0;border-radius:999px;padding:6px 10px;background:#2A6EF2;color:#fff;font-weight:600;cursor:pointer}
-    .vlx-notice a{color:#9ec1ff;text-decoration:underline}
-    .vlx-caption .vlx-tag{display:inline-flex;align-items:center;gap:6px;background:#f5f6f8;color:#475569;border:1px solid var(--vlx-border);padding:3px 8px;border-radius:999px;font-size:12px}
-    /* plan/quota 안내 토스트 */
-    .vlx-quota{display:none;margin-top:8px}
-    .vlx-quota.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
-  </style>
-</head>
-<body>
+<meta charset="utf-8" />
+<title>Visual Lexicon – Mini</title>
+
+<style>
+  :root{ --vlx-accent:#111; --vlx-blue1:#2A6EF2; --vlx-blue2:#6B8CFF; --vlx-muted:#666; --vlx-border:#e9e9ee; --vlx-bg:#fafafa; --vlx-chip:#f5f6f8; --vlx-radius:16px; --vlx-shadow:0 6px 18px rgba(0,0,0,.06); }
+  .vlx-wrap{max-width:860px;margin:0 auto;padding:16px}
+  .vlx-row{display:flex;gap:10px;align-items:flex-start}
+  .vlx-input{flex:1;padding:14px 16px;border:1px solid var(--vlx-border);border-radius:14px;font-size:16px;background:#fff;width:100%}
+  .vlx-btn{padding:12px 16px;border:0;border-radius:14px;color:#fff;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));box-shadow:var(--vlx-shadow)}
+  .vlx-status{margin:10px 2px;color:var(--vlx-muted);font-size:14px}
+  .vlx-card{display:none;border:1px solid var(--vlx-border);border-radius:var(--vlx-radius);padding:18px;background:#fff;box-shadow:var(--vlx-shadow)}
+  .vlx-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .vlx-head h2{margin:0;font-size:22px}
+  .vlx-ipa{color:var(--vlx-muted)}
+  .vlx-section{margin-top:12px}
+  .vlx-col2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .vlx-chip{display:inline-block;background:var(--vlx-chip);border-radius:999px;padding:4px 10px;margin:2px;font-size:13px}
+  .vlx-small{color:var(--vlx-muted);font-size:14px;line-height:1.55}
+  .vlx-list{margin:6px 0 0 0;padding-left:18px}
+  .vlx-imggrid{display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:12px;margin-top:8px}
+  .vlx-imgbox{aspect-ratio:1/1;width:100%;border-radius:12px;overflow:hidden;background:var(--vlx-bg);border:1px solid var(--vlx-border);position:relative}
+  .vlx-imgbox img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
+  .vlx-caption{color:#888;font-size:12px;margin-top:6px}
+  .vlx-spin{display:none;width:18px;height:18px;border:2px solid #ddd;border-top-color:var(--vlx-blue1);border-radius:50%;animation:vlx-rot .9s linear infinite}
+  @keyframes vlx-rot{to{transform:rotate(360deg)}}
+  @media (max-width:720px){ .vlx-imggrid{ grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)) } }
+  @media (max-width:420px){
+    .vlx-imggrid{ grid-template-columns:repeat(2, 1fr) }
+    .vlx-imggrid>.vlx-imgbox:last-child:nth-child(odd){ grid-column:1/-1;justify-self:center;max-width:260px;width:100% }
+  }
+  .vlx-input-wrap{position:relative;flex:1}
+  .vlx-suggest{position:absolute;top:100%;left:0;right:0;margin-top:6px;background:#fff;border:1px solid var(--vlx-border);border-radius:12px;box-shadow:var(--vlx-shadow);max-height:260px;overflow:auto;z-index:50;display:none}
+  .vlx-suggest ul{list-style:none;margin:0;padding:6px}
+  .vlx-suggest li{padding:10px 12px;cursor:pointer;border-radius:8px;display:flex;justify-content:space-between;gap:10px}
+  .vlx-suggest li:hover,.vlx-suggest li.active{background:var(--vlx-chip)}
+  .vlx-sug-roman{color:#999;font-size:12px;white-space:nowrap}
+  .vlx-sourcebar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+  .vlx-langbar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+  .vlx-langbtn{padding:6px 10px;border-radius:999px;border:1px solid var(--vlx-border);background:#fff;cursor:pointer;font-size:12px}
+  .vlx-langbtn.active{background:var(--vlx-blue2);color:#fff;border-color:transparent}
+  .vlx-transbox{border:1px solid var(--vlx-border);border-radius:12px;padding:10px;background:#fff}
+  .vlx-3d{border:1px solid var(--vlx-border);border-radius:12px;background:var(--vlx-bg);height:360px;min-height:320px;overflow:hidden;position:relative}
+  .vlx-3d::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0b0f17,#101726,#0b0f17);background-size:200% 100%;animation:vlx-shimmer 1.6s linear infinite;opacity:0;transition:opacity .25s ease}
+  .vlx-status.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
+  .vlx-3d.loading::before{opacity:.8}
+  @keyframes vlx-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .vlx-hintwrap{position:absolute;inset:0;pointer-events:none}
+  .vlx-notice{position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:10px;background:rgba(15,23,42,.92);color:#e6eefc;border:1px solid rgba(148,163,184,.25);padding:10px 12px;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.25);backdrop-filter:blur(6px);pointer-events:auto;font-size:12px;line-height:1.4}
+  .vlx-notice .vlx-dot{width:8px;height:8px;border-radius:999px;background:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.25)}
+  .vlx-notice button{border:0;border-radius:999px;padding:6px 10px;background:#2A6EF2;color:#fff;font-weight:600;cursor:pointer}
+  .vlx-notice a{color:#9ec1ff;text-decoration:underline}
+  .vlx-caption .vlx-tag{display:inline-flex;align-items:center;gap:6px;background:#f5f6f8;color:#475569;border:1px solid var(--vlx-border);padding:3px 8px;border-radius:999px;font-size:12px}
+  /* plan/quota 안내 토스트 */
+.vlx-quota{display:none;margin-top:8px}
+.vlx-quota.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
+
+</style>
+
 <div class="vlx-wrap">
   <div class="vlx-row">
     <div class="vlx-input-wrap">
-      <input id="vlx-q" class="vlx-input" placeholder="Type any word in ANY language…" autocomplete="off" aria-label="Search word" />
-      <div id="vlx-suggest" class="vlx-suggest" role="listbox" aria-label="Suggestions"></div>
+      <input id="vlx-q" class="vlx-input" placeholder="Type any word in ANY language…" autocomplete="off" />
+      <div id="vlx-suggest" class="vlx-suggest"></div>
     </div>
-    <button id="vlx-go" class="vlx-btn" type="button" aria-label="Search">Search</button>
-    <div id="vlx-spin" class="vlx-spin" aria-hidden="true"></div>
+    <button id="vlx-go" class="vlx-btn" type="button">Search</button>
+    <div id="vlx-spin" class="vlx-spin"></div>
   </div>
-  <div id="vlx-status" class="vlx-status" role="status" aria-live="polite"></div>
+  <div id="vlx-status" class="vlx-status"></div>
 
-  <div id="vlx-card" class="vlx-card" aria-live="polite">
+  <div id="vlx-card" class="vlx-card">
     <div class="vlx-head">
       <h2 id="vlx-word"></h2>
       <span id="vlx-ipa" class="vlx-ipa"></span>
@@ -83,9 +81,14 @@
     <div class="vlx-section">
       <div id="vlx-imgs" class="vlx-imggrid"></div>
       <div id="vlx-img-caption" class="vlx-caption"></div>
-      <!-- [ADD] plan/quota 안내 -->
-      <div id="vlx-quota" class="vlx-quota toast"></div>
+<!-- [ADD] plan/quota 안내 -->
+<div id="vlx-quota" class="vlx-quota toast"></div>
+
     </div>
+    <div id="vlx-sourcebar" class="vlx-sourcebar" style="display:none" aria-label="Image source switch">
+  <button id="vlx-src-auto" class="vlx-langbtn active" type="button" title="Use automatic image source">Auto</button>
+  <button id="vlx-src-commons" class="vlx-langbtn" type="button" title="Fetch from Wikimedia Commons only">Commons</button>
+</div>
 
     <div class="vlx-section">
       <h4 style="margin:0 0 6px 0">Definitions</h4>
@@ -126,8 +129,9 @@
     </div>
 
     <div class="vlx-section">
-      <div id="vlx-ai-note" class="vlx-status toast" style="display:none"></div>
-    </div>
+  <div id="vlx-ai-note" class="vlx-status toast" style="display:none"></div>
+</div>
+
   </div>
 </div>
 
@@ -160,27 +164,129 @@
   // ---------- Shorthands ----------
   const $ = id => document.getElementById(id);
 
-  // Small runtime state to avoid race conditions
-  const state = { runId: 0 };
+    // ---------- [ADD] Image source switching state & helpers ----------
+  const STATE = { last:null, imgSourceOverride:null }; // {word, uiLang, defPack, graph, antonyms, dict}
+  // STATE 바로 아래에 추가
+try{
+  const sp = new URLSearchParams(location.search);
+  const ov = (sp.get('source')||'').toLowerCase() || ((location.hash.match(/#(commons|default)/)||[])[1]||'');
+  if (ov === 'commons' || IMAGE_SOURCE_POLICY === 'commons') {
+    STATE.imgSourceOverride = 'commons';
+  }
+  // URL/정책에 없으면 저장된 사용자 선택 복원
+ if (!STATE.imgSourceOverride) {
+   try{
+     const saved = localStorage.getItem('vlx_img_source');
+     if (saved === 'commons') STATE.imgSourceOverride = 'commons';
+   }catch{}
+ }
+}catch{}
+
+  function setSourcebarVisible(v){
+    const bar=document.getElementById('vlx-sourcebar');
+    if(bar) bar.style.display = v ? 'flex' : 'none';
+  }
+  function updateSourcebarActive(){
+    const isCommons = STATE.imgSourceOverride==='commons';
+    const btnAuto = document.getElementById('vlx-src-auto');
+    const btnCommons = document.getElementById('vlx-src-commons');
+    if(btnCommons){
+    btnCommons.classList.toggle('active', isCommons);
+   btnCommons.setAttribute('aria-pressed', String(isCommons));
+  }
+  if(btnAuto){
+    btnAuto.classList.toggle('active', !isCommons);
+   btnAuto.setAttribute('aria-pressed', String(!isCommons));
+  }
+  }
+
+  // 이미지 영역만 다시 그리는 작은 렌더러
+  function renderImagesOnly(word, imgs, refineInfo){
+    const base = imgs?.base;
+    $('vlx-word').textContent = (base && base!==word) ? `${word} (${base})` : word;
+
+    const mode = String(imgs?.mode||'');
+    const urls = (imgs?.imageUrls || (imgs?.images||[]).map(i=>i.url) || []).slice(0, MAX_IMGS);
+    $('vlx-imgs').innerHTML = urls.map(u=>`<div class="vlx-imgbox"><img src="${escAttr(u)}" loading="lazy" alt="${escAttr(word)}"></div>`).join('');
+
+    const caption = mode ? `image mode: ${esc(mode)}` : '';
+    const aiChip = (mode.toLowerCase().startsWith('ai') && base) ? ` <span class="vlx-tag">AI: ${esc(base)}</span>` : '';
+    const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase) ? ` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>` : '';
+    $('vlx-img-caption').innerHTML = (caption?`<span class="vlx-tag">${caption}</span>`:'') + aiChip + refinedChip;
+
+    const modeTag = $('vlx-mode');
+    if(mode){ modeTag.textContent = mode; modeTag.style.display='inline-block'; } else { modeTag.style.display='none'; }
+    const aiTag = $('vlx-ai-pair');
+    if(mode.toLowerCase().startsWith('ai') && base){ aiTag.textContent=`AI: ${base}`; aiTag.style.display='inline-block'; }
+    else if(refineInfo?.refined && refineInfo.phrase){ aiTag.textContent=`refined: ${refineInfo.phrase}`; aiTag.style.display='inline-block'; }
+    else aiTag.style.display='none';
+
+    // 요금제 안내 토스트는 유지 (영역을 갈아낄 때도 그대로 보여주기)
+    const qNote = $('vlx-quota');
+    if(qNote){ qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en'); qNote.style.display='inline-flex'; }
+  }
+
+  // 현재 단어 기준으로 source override 사용해 이미지만 새로 불러오기
+  async function fetchAndRenderSource(source){  // source: 'commons' | null
+    if(!STATE.last) return;
+    try{
+      $('vlx-spin').style.display='inline-block';
+      const imgs = await getVLImages(STATE.last.word, source ? {source} : undefined);
+      const refineInfo = source ? {refined:false, phrase:null} : null;
+      renderImagesOnly(STATE.last.word, imgs || {}, refineInfo);
+    }finally{
+      $('vlx-spin').style.display='none';
+    }
+  }
+
+  // 버튼 핸들러 바인딩 (DOM 준비 이후)
+  addEventListener('DOMContentLoaded', ()=>{
+    const bAuto = document.getElementById('vlx-src-auto');
+    const bCommons = document.getElementById('vlx-src-commons');
+
+    if(bCommons){
+      bCommons.addEventListener('click', async ()=>{
+        STATE.imgSourceOverride = 'commons';
+        try{ localStorage.setItem('vlx_img_source','commons'); }catch{}
+        updateSourcebarActive();
+        await fetchAndRenderSource('commons');
+      });
+    }
+    if(bAuto){
+      bAuto.addEventListener('click', async ()=>{
+        STATE.imgSourceOverride = null;
+        try{ localStorage.setItem('vlx_img_source','auto'); }catch{}
+        updateSourcebarActive();
+        await fetchAndRenderSource(null); // 다시 auto로
+      });
+    }
+  });
 
   // ---- Plan/Quota 안내 문구 (로케일 대응) ----
-  const PLAN_URL = 'https://www.visuallexicon.org/subscription';
-  function quotaMessage(lang){
-    const L = canonLang(lang||'en');
-    if (L==='ko') return `AnySearch 이미지 미리보기는 <strong>플랜별 할당량</strong>이 적용됩니다. 사용하려면 <a href="${PLAN_URL}" target="_blank" rel="noopener noreferrer">구독</a>이 필요합니다.`;
-    if (L==='ja') return `AnySearch の画像プレビューにはプランごとの <strong>クォータ</strong>が適用されます。ご利用には<a href="${PLAN_URL}" target="_blank" rel="noopener noreferrer">サブスクリプション</a>が必要です。`;
-    if (L==='zh' || L==='zh-hans') return `AnySearch 图片预览受 <strong>套餐配额</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener noreferrer">订阅</a>。`;
-    if (L==='zh-hant') return `AnySearch 圖片預覽受 <strong>方案額度</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener noreferrer">訂閱</a>。`;
-    return `AnySearch image previews are subject to plan quotas. A <a href="${PLAN_URL}" target="_blank" rel="noopener noreferrer">subscription</a> is required.`;
-  }
+const PLAN_URL = 'https://www.visuallexicon.org/subscription';
+function quotaMessage(lang){
+  const L = canonLang(lang||'en');
+  if (L==='ko') return `AnySearch 이미지 미리보기는 <strong>플랜별 할당량</strong>이 적용됩니다. 사용하려면 <a href="${PLAN_URL}" target="_blank" rel="noopener">구독</a>이 필요합니다.`;
+  if (L==='ja') return `AnySearch の画像プレビューにはプランごとの <strong>クォータ</strong>が適用されます。ご利用には<a href="${PLAN_URL}" target="_blank" rel="noopener">サブスクリプション</a>が必要です。`;
+  if (L==='zh' || L==='zh-hans') return `AnySearch 图片预览受 <strong>套餐配额</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">订阅</a>。`;
+  if (L==='zh-hant') return `AnySearch 圖片預覽受 <strong>方案額度</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">訂閱</a>。`;
+  return `AnySearch image previews are subject to plan quotas. A <a href="${PLAN_URL}" target="_blank" rel="noopener">subscription</a> is required.`;
+}
 
   const statusEl=$('vlx-status'), cardEl=$('vlx-card'), spinEl=$('vlx-spin');
   const qEl=$('vlx-q'), goEl=$('vlx-go'), sugEl=$('vlx-suggest');
 
   const small = s => `<div class="vlx-small">${s}</div>`;
-  const chip  = s => `<span class="vlx-chip">${s}</span>`;
-  const li    = s => `<li>${s}</li>`;
-  const esc   = s => (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const chip  = s => `<span class="vlx-chip">${esc(s)}</span>`;
+ const li    = s => `<li>${esc(s)}</li>`;
+  // 텍스트 노드용 이스케이프
+  const esc   = s => (s||'').replace(/[&<>]/g, m => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;'}[m]
+  ));
+  // 속성값(img/audio/src, data-*)용 이스케이프
+  const escAttr = s => (s||'').replace(/[&<>"']/g, m => (
+     {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
+   ));
   const uniq  = a => Array.from(new Set((a||[]).filter(Boolean)));
   const debounce=(fn,ms=400)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};};
 
@@ -191,12 +297,8 @@
   function sameSiteAsPage(apiBase){
     try{
       const api=new URL(apiBase, location.href);
-      // more robust registrable domain extraction (supports co.uk, etc.)
-      const parts = api.hostname.split('.');
-      const registrable = parts.length>=3 ? parts.slice(-3).join('.') : parts.slice(-2).join('.');
-      const here = location.hostname.split('.');
-      const hereReg = here.length>=3 ? here.slice(-3).join('.') : here.slice(-2).join('.');
-      return api.protocol===location.protocol && registrable===hereReg;
+      const registrable = h => h.split('.').slice(-2).join('.');
+      return api.protocol===location.protocol && registrable(api.hostname)===registrable(location.hostname);
     }catch{ return true; }
   }
   const SEND_COOKIES = sameSiteAsPage(API_BASE) && !AUTH_TOKEN;
@@ -236,15 +338,16 @@
   }
   const canonLang = l => ({kr:'ko',jp:'ja',cn:'zh',tw:'zh-hant','zh-cn':'zh','zh-tw':'zh-hant',hk:'zh-hant'}[(l||'').toLowerCase()] || (l||'').toLowerCase() || 'en');
   function getUiLang(fallback){
-    const bar = document.getElementById('vlx-trans-lang');
-    const active = bar?.querySelector('[data-lang].is-active,[data-lang].active');
-    if (active?.dataset?.lang) return canonLang(active.dataset.lang);
-    const docLang = document.documentElement.getAttribute('lang');
-    if (docLang) return canonLang(docLang);
-    const navLang = navigator.language || navigator.userLanguage;
-    if (navLang) return canonLang(navLang);
-    return canonLang(guessLang(fallback || ''));
-  }
+  const bar = document.getElementById('vlx-trans-lang');
+  const active = bar?.querySelector('[data-lang].is-active,[data-lang].active');
+  if (active?.dataset?.lang) return canonLang(active.dataset.lang);
+  const docLang = document.documentElement.getAttribute('lang');
+  if (docLang) return canonLang(docLang);
+
+  const navLang = navigator.language || navigator.userLanguage;
+  if (navLang) return canonLang(navLang);
+  return canonLang(guessLang(fallback || ''));
+}
 
   function getVLImages(word, opts={}){
     const u=new URL(urlOf(''));
@@ -254,7 +357,8 @@
     return j(u.toString(), getUiLang(word));
   }
   function decideImageOpts(){
-    try{
+    if (STATE.imgSourceOverride === 'commons') return { source:'commons' };
+      try{
       const sp=new URLSearchParams(location.search);
       const ov=(sp.get('source')||'').toLowerCase() || ((location.hash.match(/#(commons|default)/)||[])[1]||'');
       if(ov==='commons') return {source:'commons'};
@@ -491,12 +595,9 @@
       let done=false; const ok=()=>{ if(!done){ done=true; resolve(window[globalName]); } };
       const bad=e=>{ if(!done){ done=true; delete ensureOnceMemo[globalName]; reject(e); } };
       const t=setTimeout(()=>bad(new Error(`Timeout loading ${globalName} from ${src}`)), timeoutMs);
-      if(prev){
-        if(prev.dataset.loaded==='1'){ clearTimeout(t); ok(); return; }
-        prev.addEventListener('load',()=>{clearTimeout(t);prev.dataset.loaded='1';ok();},{once:true}); prev.addEventListener('error',e=>{clearTimeout(t);bad(e)},{once:true}); return;
-      }
+      if(prev){ prev.addEventListener('load',()=>{clearTimeout(t);ok();},{once:true}); prev.addEventListener('error',e=>{clearTimeout(t);bad(e)},{once:true}); return; }
       const s=document.createElement('script'); s.id=id; s.src=src; s.async=true;
-      s.onload=()=>{clearTimeout(t);s.dataset.loaded='1';ok();}; s.onerror=e=>{clearTimeout(t);bad(e);}; document.head.appendChild(s);
+      s.onload=()=>{clearTimeout(t);ok();}; s.onerror=e=>{clearTimeout(t);bad(e);}; document.head.appendChild(s);
     }); return ensureOnceMemo[globalName];
   }
   async function ensureLibOnceMulti(globalName, srcs){
@@ -579,7 +680,7 @@
         return (s?.group==='center'||t?.group==='center')?60:90; });
       fg.d3Force('charge').strength(-180);
       let fitOnce=false; fg.onEngineStop(()=>{ if(!fitOnce){ fitOnce=true; fg.zoomToFit(600,60); } });
-      const size=()=>{ fg.width(root.clientWidth).height(root.clientHeight); }; size(); window.addEventListener('resize', size, { passive:true });
+      const size=()=>{ fg.width(root.clientWidth).height(root.clientHeight); }; size(); addEventListener('resize', size);
 
       if(data._empty){
         show3DNotice(root,{ text:'No related words. Possibly blocked by CSP. (api.datamuse.com / dictionaryapi.dev)',
@@ -654,8 +755,8 @@
     const lang=guessLang(qEl.value.trim());
     if(!SHOW_SUGGESTIONS || !items.length){ sugEl.style.display='none'; sugEl.innerHTML=''; return; }
     sugEl.innerHTML=`<ul>${items.map(w=>{
-      const rom=/[가-힣ぁ-ゔァ-ヴー々〆〤一-龥]/.test(w)?romanForDisplay(lang,w):''; return `<li role="option" data-word="${esc(w)}"><span>${esc(w)}</span>${rom?`<span class="vlx-sug-roman">${esc(rom)}</span>`:''}</li>`;
-    }).join('')}</ul>`;
+      const rom=/[가-힣ぁ-ゔァ-ヴー々〆〤一-龥]/.test(w)?romanForDisplay(lang,w):''; return `<li data-word="${escAttr(w)}"><span>${esc(w)}</span>${rom?`<span class="vlx-sug-roman">${esc(rom)}</span>`:''}</li>`;
+     }).join('')}</ul>`;
     sugEl.style.display='block';
     sugEl.querySelectorAll('li').forEach(li=>li.addEventListener('click',()=>{ qEl.value=li.dataset.word||li.textContent; hideSuggestions(); run(); }));
   }
@@ -665,7 +766,7 @@
   function mountLangBar(){
     if(trans.mounted) return;
     const bar=$('vlx-trans-lang');
-    bar.innerHTML=LANG_OPTIONS.map(o=>`<button class="vlx-langbtn" data-lang="${o.code}" title="${esc(o.label)}">${esc(o.label)}</button>`).join('');
+    bar.innerHTML=LANG_OPTIONS.map(o=>`<button class="vlx-langbtn" data-lang="${o.code}" title="${escAttr(o.label)}">${esc(o.label)}</button>`).join('');
     bar.addEventListener('click', e=>{
       const btn=e.target.closest('.vlx-langbtn'); if(!btn) return;
       trans.lang=btn.dataset.lang||'en';
@@ -685,7 +786,7 @@
       const data=await fetchDefForLang(word, trans.lang) || {};
       const defs=(data?.definitionsTranslated?.length?data.definitionsTranslated:data.definitions)||[];
       const t=data.translation?`<p style="margin:.25rem 0;font-weight:600">${esc(data.translation)}</p>`:'';
-      const au=data.audio?`<audio controls preload="metadata" style="width:100%;margin:.25rem 0" src="${esc(data.audio)}"></audio>`:'';
+      const au=data.audio?`<audio controls preload="metadata" style="width:100%;margin:.25rem 0" src="${escAttr(data.audio)}"></audio>`:'';
       const dl=defs.length?`<ul style="padding-left:1rem;margin:.25rem 0">${defs.slice(0,8).map(d=>`<li>${esc(d)}</li>`).join('')}</ul>`:small('No translated definitions.');
       box.innerHTML=t+au+dl;
     }catch{ box.innerHTML=small('Failed to load translation.'); }
@@ -699,14 +800,14 @@
     if(audio){ audioEl.src=audio; audioEl.style.display=''; }
 
     const mode=String(imgs?.mode||''); const urls=(imgs?.imageUrls || (imgs?.images||[]).map(i=>i.url) || []).slice(0,MAX_IMGS);
-    $('vlx-imgs').innerHTML=urls.map(u=>`<div class="vlx-imgbox"><img src="${esc(u)}" loading="lazy" alt="${esc(word)}"></div>`).join('');
-    const caption = mode ? `image mode: ${mode}` : '';
-    const aiChip = (mode.toLowerCase().startsWith('ai') && base)?` <span class="vlx-tag">AI: ${esc(base)}</span>`:'';
-    const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase)?` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>`:'';
+    $('vlx-imgs').innerHTML=urls.map(u=>`<div class="vlx-imgbox"><img src="${escAttr(u)}" loading="lazy" alt="${escAttr(word)}"></div>`).join('');
+    const caption = mode ? `image mode: ${esc(mode)}` : '';
+    const aiChip = (mode.toLowerCase().startsWith('ai') && base) ? ` <span class="vlx-tag">AI: ${esc(base)}</span>` : '';
+ const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase) ? ` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>` : '';
     $('vlx-img-caption').innerHTML=(caption?`<span class="vlx-tag">${caption}</span>`:'')+aiChip+refinedChip;
-    const qNote = $('vlx-quota');
-    qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en');
-    qNote.style.display = 'inline-flex';
+const qNote = $('vlx-quota');
+qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en');
+qNote.style.display = 'inline-flex';
 
     const modeTag=$('vlx-mode'); if(mode){ modeTag.textContent=mode; modeTag.style.display='inline-block'; } else modeTag.style.display='none';
     const aiTag=$('vlx-ai-pair');
@@ -716,7 +817,7 @@
 
     const defs=(defPack?.defs||[]).slice(0,3);
     setHTML('vlx-defs', defs.length? `<ul class="vlx-list">${defs.map(li).join('')}</ul>` : small('No definition found.'));
-    setHTML('vlx-def-source', defPack?.source ? `Source: ${defPack.source}` : '');
+   setHTML('vlx-def-source', defPack?.source ? `Source: ${esc(defPack.source)}` : '');
 
     const pos=defPack?.pos || [];
     setHTML('vlx-pos', pos.length? pos.map(chip).join('') : small('—'));
@@ -763,7 +864,6 @@
   // ---------- Run ----------
   async function run(){
     const raw=qEl.value.trim(); if(!raw) return;
-    const myId = ++state.runId; // track this invocation
     const uiLang=getUiLang(raw); const lemmaLang=guessLang(raw); const isEnglish=canonLang(lemmaLang)==='en';
     hideSuggestions(); spinEl.style.display='inline-block'; statusEl.textContent='Searching…'; cardEl.style.display='none';
 
@@ -774,8 +874,6 @@
       isEnglish ? dictionaryApiDevDriver(raw) : Promise.resolve(null),
       isEnglish ? (async()=>{ try{ const r=await fetch('https://api.datamuse.com/words?rel_ant='+encodeURIComponent(raw)); return (await r.json()).slice(0,16).map(x=>x.word).filter(Boolean);}catch{return [];} })() : Promise.resolve([])
     ]);
-
-    if (myId !== state.runId) { return; } // drop stale results
 
     let imgs=imgsR.status==='fulfilled' ? (imgsR.value||{}) : {};
     const defs =defR.status==='fulfilled' ? (defR.value||{}) : {};
@@ -796,6 +894,10 @@
 
     spinEl.style.display='none';
     renderAll(raw, uiLang, defs, graph, imgs, refineInfo, antonyms, dict);
+        // [ADD] 스위처 상태/표시 초기화
+    STATE.last = { word: raw, uiLang, defPack: defs, graph, antonyms, dict };
+    setSourcebarVisible(true);
+    updateSourcebarActive();
   }
 
   // ---------- Events ----------
@@ -812,10 +914,6 @@
     else if(e.key==='ArrowUp'){ e.preventDefault(); const ni=Math.max(0, i-1); rows.forEach(r=>r.classList.remove('active')); rows[ni].classList.add('active'); rows[ni].scrollIntoView({block:'nearest'}); }
     else if(e.key==='Enter' && i>=0){ e.preventDefault(); qEl.value=rows[i].dataset.word||rows[i].textContent; hideSuggestions(); run(); }
   });
-
-  // Focus the input on load for convenience
-  qEl.focus({preventScroll:true});
 })();
 </script>
-</body>
 </html>
