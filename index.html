@@ -6,9 +6,12 @@
 <style>
   :root{ --vlx-accent:#111; --vlx-blue1:#2A6EF2; --vlx-blue2:#6B8CFF; --vlx-muted:#666; --vlx-border:#e9e9ee; --vlx-bg:#fafafa; --vlx-chip:#f5f6f8; --vlx-radius:16px; --vlx-shadow:0 6px 18px rgba(0,0,0,.06); }
   .vlx-wrap{max-width:860px;margin:0 auto;padding:16px}
-  .vlx-row{display:flex;gap:10px;align-items:flex-start}
-  .vlx-input{flex:1;padding:14px 16px;border:1px solid var(--vlx-border);border-radius:14px;font-size:16px;background:#fff;width:100%}
+  .vlx-row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+  .vlx-input{flex:1;min-width:260px;padding:14px 16px;border:1px solid var(--vlx-border);border-radius:14px;font-size:16px;background:#fff;width:100%}
   .vlx-btn{padding:12px 16px;border:0;border-radius:14px;color:#fff;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));box-shadow:var(--vlx-shadow)}
+  /* NEW: secondary button for image mode toggle */
+  .vlx-btn2{padding:12px 14px;border-radius:14px;border:1px solid var(--vlx-border);background:#fff;color:#111;font-weight:600;cursor:pointer;box-shadow:var(--vlx-shadow)}
+  .vlx-btn2.active{border-color:var(--vlx-blue1);color:var(--vlx-blue1)}
   .vlx-status{margin:10px 2px;color:var(--vlx-muted);font-size:14px}
   .vlx-card{display:none;border:1px solid var(--vlx-border);border-radius:var(--vlx-radius);padding:18px;background:#fff;box-shadow:var(--vlx-shadow)}
   .vlx-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -51,47 +54,8 @@
   .vlx-notice button{border:0;border-radius:999px;padding:6px 10px;background:#2A6EF2;color:#fff;font-weight:600;cursor:pointer}
   .vlx-notice a{color:#9ec1ff;text-decoration:underline}
   .vlx-caption .vlx-tag{display:inline-flex;align-items:center;gap:6px;background:#f5f6f8;color:#475569;border:1px solid var(--vlx-border);padding:3px 8px;border-radius:999px;font-size:12px}
-  /* plan/quota 안내 토스트 */
-.vlx-quota{display:none;margin-top:8px}
-.vlx-quota.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
-.vlx-ghost{background:#fff;color:var(--vlx-blue1);border:1px solid var(--vlx-border)}
-.vlx-ghost.active{background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));color:#fff;border:0}
-  /* ==== spacing + focus ring fix ==== */
-
-/* 버튼과 입력 사이 간격 살짝 키우기 */
-.vlx-row{ gap:14px; align-items:center; }
-
-/* 기본 outline 제거 + 접근성 있는 커스텀 포커스 링 */
-.vlx-input:focus,
-.vlx-input:focus-visible{
-  outline: none;
-  border-color: var(--vlx-blue1);
-  box-shadow: 0 0 0 3px rgba(42,110,242,.25); /* 겹쳐 보여도 버튼을 덮지 않음 */
-}
-
-/* 버튼 포커스 링도 통일 */
-.vlx-btn:focus-visible{
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(42,110,242,.35), var(--vlx-shadow);
-}
-
-/* 작은 화면에서는 줄바꿈해서 더 넉넉하게 */
-@media (max-width:640px){
-  .vlx-row{ flex-wrap:wrap; gap:10px; }
-  .vlx-input-wrap{ flex:1 1 100%; }
-  #vlx-go, #vlx-img-toggle{ margin-top:8px; }
-}
-
-/* 고대비(강제 색상) 모드 사용자 배려: 시스템 색으로 outline 유지 */
-@media (forced-colors: active){
-  .vlx-input:focus-visible,
-  .vlx-btn:focus-visible{
-    outline: 2px solid Highlight;
-    outline-offset: 2px;
-    box-shadow: none;
-  }
-}
-
+  .vlx-quota{display:none;margin-top:8px}
+  .vlx-quota.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
 </style>
 
 <div class="vlx-wrap">
@@ -101,11 +65,11 @@
       <div id="vlx-suggest" class="vlx-suggest"></div>
     </div>
     <button id="vlx-go" class="vlx-btn" type="button">Search</button>
-    <button id="vlx-img-toggle" class="vlx-btn vlx-ghost" type="button" aria-pressed="false">
-  Images: Auto
-</button>
+    <!-- NEW: toggle button -->
+    <button id="vlx-img-toggle" class="vlx-btn2" type="button" aria-pressed="false" title="Toggle image source (Auto → Commons → Default)">Images: Auto</button>
     <div id="vlx-spin" class="vlx-spin"></div>
   </div>
+
   <div id="vlx-status" class="vlx-status"></div>
 
   <div id="vlx-card" class="vlx-card">
@@ -120,9 +84,7 @@
     <div class="vlx-section">
       <div id="vlx-imgs" class="vlx-imggrid"></div>
       <div id="vlx-img-caption" class="vlx-caption"></div>
-<!-- [ADD] plan/quota 안내 -->
-<div id="vlx-quota" class="vlx-quota toast"></div>
-
+      <div id="vlx-quota" class="vlx-quota toast"></div>
     </div>
 
     <div class="vlx-section">
@@ -164,9 +126,8 @@
     </div>
 
     <div class="vlx-section">
-  <div id="vlx-ai-note" class="vlx-status toast" style="display:none"></div>
-</div>
-
+      <div id="vlx-ai-note" class="vlx-status toast" style="display:none"></div>
+    </div>
   </div>
 </div>
 
@@ -185,7 +146,7 @@
 
   const MAX_IMGS   = 3;
   const SHOW_SUGGESTIONS = true;
-  const IMAGE_SOURCE_POLICY = 'auto'; // 'auto' | 'commons' | 'default'
+  const DEFAULT_IMAGE_POLICY = 'auto'; // 'auto' | 'commons' | 'default'
   const AUTO_SEARCH_ON_INPUT = false;
 
   const LANG_OPTIONS = [
@@ -196,78 +157,23 @@
     { code:"de", label:"Deutsch" },{ code:"vi", label:"Tiếng Việt" },{ code:"tr", label:"Türkçe" },{ code:"ur", label:"اردو" }
   ];
 
-  // === Image policy state ===
-const IMG_POLICY_KEY = 'VLX_IMG_POLICY';
-const getPolicy = () => (window.VLX_IMG_POLICY || localStorage.getItem(IMG_POLICY_KEY) || '').toLowerCase(); // '' | 'commons'
-const setPolicy = (p) => { window.VLX_IMG_POLICY = p; localStorage.setItem(IMG_POLICY_KEY, p || ''); updatePolicyButton(); };
-const isCommonsMode = () => getPolicy() === 'commons';
-
-// === Toggle button binding ===
-const imgToggle = document.getElementById('vlx-img-toggle');
-function updatePolicyButton(){
-  if(!imgToggle) return;
-  const commons = isCommonsMode();
-  imgToggle.textContent = 'Images: ' + (commons ? 'Commons' : 'Auto');
-  imgToggle.classList.toggle('active', commons);
-  imgToggle.setAttribute('aria-pressed', String(commons));
-}
-updatePolicyButton();
-
-// setPolicy / updatePolicyButton 정의 아래 아무 곳에 추가
-(function bootstrapPolicyFromURL(){
-  try {
-    const sp = new URLSearchParams(location.search);
-    const qs = (sp.get('source') || sp.get('mode') || sp.get('policy') || sp.get('img') || '').toLowerCase();
-    const bare = sp.has('commons') ? 'commons' : (sp.has('default') ? 'default' : '');
-    const hashMatch =
-      (location.hash.match(/(?:^|#)(commons|default)\b/i) || [])[1] ||
-      (location.hash.match(/mode=(commons|default)/i) || [])[1] || '';
-    const ov = (qs || bare || hashMatch).toLowerCase();
-
-    // 이미 저장된 사용자가 없다면(처음 방문)만 URL을 반영
-    if (!getPolicy() && ov === 'commons') setPolicy('commons');
-  } catch {}
-  updatePolicyButton();
-})();
-
-
-if (imgToggle) {
-  imgToggle.addEventListener('click', () => {
-    setPolicy(isCommonsMode() ? '' : 'commons');  // flip
-    // URL 동기화 (?mode=commons 붙이기/빼기)
-    try{
-      const sp = new URLSearchParams(location.search);
-      if (isCommonsMode()) sp.set('mode','commons');
-      else { sp.delete('mode'); sp.delete('source'); sp.delete('policy'); sp.delete('img'); sp.delete('commons'); }
-      history.replaceState(null,'', location.pathname + (sp.toString()?('?'+sp.toString()):'') + location.hash);
-    }catch{}
-    if (qEl.value.trim()) run(); // 검색어 있으면 즉시 재검색
-  });
-
-  // 단축키: Ctrl/Cmd/Alt + C → 토글
-  window.addEventListener('keydown', (e)=>{
-    const k = (e.key||'').toLowerCase();
-    if (k === 'c' && (e.ctrlKey||e.metaKey||e.altKey)) { e.preventDefault(); imgToggle.click(); }
-  });
-}
-
-
   // ---------- Shorthands ----------
   const $ = id => document.getElementById(id);
 
   // ---- Plan/Quota 안내 문구 (로케일 대응) ----
-const PLAN_URL = 'https://www.visuallexicon.org/subscription';
-function quotaMessage(lang){
-  const L = canonLang(lang||'en');
-  if (L==='ko') return `AnySearch 이미지 미리보기는 <strong>플랜별 할당량</strong>이 적용됩니다. 사용하려면 <a href="${PLAN_URL}" target="_blank" rel="noopener">구독</a>이 필요합니다.`;
-  if (L==='ja') return `AnySearch の画像プレビューにはプランごとの <strong>クォータ</strong>が適用されます。ご利用には<a href="${PLAN_URL}" target="_blank" rel="noopener">サブスクリプション</a>が必要です。`;
-  if (L==='zh' || L==='zh-hans') return `AnySearch 图片预览受 <strong>套餐配额</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">订阅</a>。`;
-  if (L==='zh-hant') return `AnySearch 圖片預覽受 <strong>方案額度</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">訂閱</a>。`;
-  return `AnySearch image previews are subject to plan quotas. A <a href="${PLAN_URL}" target="_blank" rel="noopener">subscription</a> is required.`;
-}
+  const PLAN_URL = 'https://www.visuallexicon.org/subscription';
+  function quotaMessage(lang){
+    const L = canonLang(lang||'en');
+    if (L==='ko') return `AnySearch 이미지 미리보기는 <strong>플랜별 할당량</strong>이 적용됩니다. 사용하려면 <a href="${PLAN_URL}" target="_blank" rel="noopener">구독</a>이 필요합니다.`;
+    if (L==='ja') return `AnySearch の画像プレビューにはプランごとの <strong>クォータ</strong>が適用されます。ご利用には<a href="${PLAN_URL}" target="_blank" rel="noopener">サブスクリプション</a>が必要です。`;
+    if (L==='zh' || L==='zh-hans') return `AnySearch 图片预览受 <strong>套餐配额</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">订阅</a>。`;
+    if (L==='zh-hant') return `AnySearch 圖片預覽受 <strong>方案額度</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">訂閱</a>。`;
+    return `AnySearch image previews are subject to plan quotas. A <a href="${PLAN_URL}" target="_blank" rel="noopener">subscription</a> is required.`;
+  }
 
   const statusEl=$('vlx-status'), cardEl=$('vlx-card'), spinEl=$('vlx-spin');
   const qEl=$('vlx-q'), goEl=$('vlx-go'), sugEl=$('vlx-suggest');
+  const imgToggle=$('vlx-img-toggle');
 
   const small = s => `<div class="vlx-small">${s}</div>`;
   const chip  = s => `<span class="vlx-chip">${s}</span>`;
@@ -324,23 +230,65 @@ function quotaMessage(lang){
   }
   const canonLang = l => ({kr:'ko',jp:'ja',cn:'zh',tw:'zh-hant','zh-cn':'zh','zh-tw':'zh-hant',hk:'zh-hant'}[(l||'').toLowerCase()] || (l||'').toLowerCase() || 'en');
   function getUiLang(fallback){
-  const bar = document.getElementById('vlx-trans-lang');
-  const active = bar?.querySelector('[data-lang].is-active,[data-lang].active');
-  if (active?.dataset?.lang) return canonLang(active.dataset.lang);
-  const docLang = document.documentElement.getAttribute('lang');
-  if (docLang) return canonLang(docLang);
+    const bar = document.getElementById('vlx-trans-lang');
+    const active = bar?.querySelector('[data-lang].is-active,[data-lang].active');
+    if (active?.dataset?.lang) return canonLang(active.dataset.lang);
+    const docLang = document.documentElement.getAttribute('lang');
+    if (docLang) return canonLang(docLang);
+    const navLang = navigator.language || navigator.userLanguage;
+    if (navLang) return canonLang(navLang);
+    return canonLang(guessLang(fallback || ''));
+  }
 
-  const navLang = navigator.language || navigator.userLanguage;
-  if (navLang) return canonLang(navLang);
-  return canonLang(guessLang(fallback || ''));
-}
-
+  // ---------- AnySearch: images / graph ----------
   function getVLImages(word, opts={}){
     const u=new URL(urlOf(''));
     u.searchParams.set('lemma', word.trim().toLowerCase());
     u.searchParams.set('lang', getUiLang(word));
     if(opts.source) u.searchParams.set('source', String(opts.source));
     return j(u.toString(), getUiLang(word));
+  }
+
+  // --- MODE TOGGLE (Auto/Commons/Default) ---
+  let IMG_MODE = (localStorage.getItem('VLX_IMG_MODE') || DEFAULT_IMAGE_POLICY || 'auto').toLowerCase();
+  const humanMode = m => (m==='commons'?'Commons':(m==='default'?'Default':'Auto'));
+  function applyModeLabel(){
+    if(!imgToggle) return;
+    imgToggle.textContent = `Images: ${humanMode(IMG_MODE)}`;
+    const active = IMG_MODE !== 'auto';
+    imgToggle.classList.toggle('active', active);
+    imgToggle.setAttribute('aria-pressed', String(active));
+  }
+  applyModeLabel();
+  imgToggle.addEventListener('click', ()=>{
+    IMG_MODE = (IMG_MODE==='auto') ? 'commons' : (IMG_MODE==='commons' ? 'default' : 'auto');
+    localStorage.setItem('VLX_IMG_MODE', IMG_MODE);
+    applyModeLabel();
+    if(qEl.value.trim()) run();
+  });
+
+  // Decide image options (button override > URL params > default policy)
+  function decideImageOpts(){
+    // 1) explicit user toggle wins
+    if (IMG_MODE === 'commons') return { source:'commons' };
+    if (IMG_MODE === 'default') return {};
+
+    // 2) URL / hash overrides (when in Auto)
+    try{
+      const sp = new URLSearchParams(location.search);
+      const qs = (sp.get('source') || sp.get('mode') || sp.get('policy') || sp.get('img') || '').toLowerCase();
+      const bare = sp.has('commons') ? 'commons' : (sp.has('default') ? 'default' : '');
+      const hashMatch = (location.hash.match(/(?:^|#)(commons|default)\b/i) || [])[1] ||
+                        (location.hash.match(/mode=(commons|default)/i) || [])[1] || '';
+      const ov = (qs || bare || hashMatch).toLowerCase();
+      if (ov === 'commons') return { source:'commons' };
+      if (ov === 'default') return {};
+    }catch{}
+
+    // 3) global fallback policy
+    if (DEFAULT_IMAGE_POLICY === 'commons') return { source:'commons' };
+    if (DEFAULT_IMAGE_POLICY === 'default') return {};
+    return {};
   }
 
   function getVLGraph(word, lemmaLang){
@@ -351,6 +299,7 @@ function quotaMessage(lang){
     u.searchParams.set('lang', lang);
     return j(u.toString(), lang);
   }
+
   const SCORE={KO_STD:0.95,JISHO:0.9,MOE:0.9,DICTAPI:0.85,DWDS:0.8,DA:0.8,TDK:0.85,YANDEX:0.75,WIKI:0.65};
   const TTL={GOOD:86400,OK:43200,WEAK:3600};
   const pack=(ok,defs,src,extra={})=>Object.assign({ok,defs:(defs||[]).filter(Boolean).slice(0,5),source:src,score:0.6,ttlSec:TTL.OK},extra);
@@ -361,6 +310,7 @@ function quotaMessage(lang){
     if(!j?.exp||Date.now()>j.exp){ localStorage.removeItem(k); return null; } return j.data; }catch{ return null; } };
   const writeCache=(k,v,ttl)=>{ try{ localStorage.setItem(k, JSON.stringify({exp:Date.now()+((ttl||3600)*1000), data:v})); }catch{} };
 
+  // --- Dictionary drivers (unchanged, trimmed for brevity in this comment) ---
   async function dictionaryApiDevDriver(term){
     try{
       const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(term));
@@ -498,6 +448,7 @@ function quotaMessage(lang){
     if(!best) best=pack(true,[`No definition found for “${term}”.`],'fallback',{score:0.3,ttlSec:TTL.WEAK});
     writeCache(key,best,best.ttlSec||TTL.OK); return best;
   }
+
   const normalizeWord=s=>String(s||'').toLowerCase().trim().match(/^[a-z][a-z-]{2,22}$/)?.[0]||'';
   function sanitizeNodeList(words, cap=24){
     const seen=new Set(), out=[];
@@ -506,13 +457,14 @@ function quotaMessage(lang){
       seen.add(t); out.push({id:t,label:t}); if(out.length>=cap) break;
     } return out;
   }
+
   async function fetchThesaurusFromDatamuse(word){
     const enc=encodeURIComponent;
     const [dmSyn,dmAnt,dmML,dmTRG]=await Promise.all([
       fetch(`https://api.datamuse.com/words?rel_syn=${enc(word)}&max=100`).then(r=>r.json()).catch(()=>[]),
       fetch(`https://api.datamuse.com/words?rel_ant=${enc(word)}&max=100`).then(r=>r.json()).catch(()=>[]),
       fetch(`https://api.datamuse.com/words?ml=${enc(word)}&max=100`).then(r=>r.json()).catch(()=>[]),
-      fetch(`https://api.datamuse.com/words?rel_trg=${enc(word)}&max=100`).then(r=>r.json()).catch(()=>[])
+      fetch(`https://api.datamuse.com/words?rel_trg=${enc(word)}&max=100`).then(r=>r.json()).catch(()=>[]),
     ]);
     const toWord=x=>(x&&(x.word||x.id||x.label)||'').toLowerCase().trim();
     const synNodes=sanitizeNodeList(dmSyn.map(toWord),24);
@@ -666,7 +618,8 @@ function quotaMessage(lang){
       show3DNotice(document.querySelector(container), {text:'3D library blocked by CSP/CDN', onRetry:()=>mountThesaurus3D({container,word,pivot})});
     }finally{ document.querySelector(container)?.classList.remove('loading'); }
   }
-  const hardMap={}; 
+
+  const hardMap={};
   function phraseByPOS(word, defPack, fall){
     const pos=defPack?.pos||[]; const f=(fall||word||'').toString().trim(); if(!f) return '';
     const isLatin=/^[a-z]/i.test(f);
@@ -700,6 +653,7 @@ function quotaMessage(lang){
     if(try2?.imageUrls?.length) return {imgs:try2, refined:true, phrase:`${base} illustration`};
     return { imgs, refined:false, phrase:null };
   }
+
   async function suggestWiktionary(term, lang){
     try{
       const u=`https://${hostFromLang(lang)}.wiktionary.org/w/api.php?action=query&list=prefixsearch&pssearch=${encodeURIComponent(term)}&pslimit=10&format=json&origin=*`;
@@ -725,29 +679,6 @@ function quotaMessage(lang){
   function romanizeJa(str){ let hira=kataToHira(str); hira=hira.replace(/っ([か-ぢつ-もやゆよら-ろわゐゑをんが-ぽ])/g,(_,n)=>{ const r=JA_MAP[n]||''; return (r[0]||'')+n; });
     let out=''; for(let i=0;i<hira.length;i++){ const two=hira.slice(i,i+2); if(JA_MAP[two]){ out+=JA_MAP[two]; i++; continue; } const ch=hira[i];
       if(ch==='ー'){ const prev=out[out.length-1]||''; out+=prev; continue; } out+=(JA_MAP[ch]||ch); } return out; }
-function decideImageOpts(){
-  try{
-    const sp = new URLSearchParams(location.search);
-    // 다양한 키 허용
-    const qs = (sp.get('source') || sp.get('mode') || sp.get('policy') || sp.get('img') || '').toLowerCase();
-    // ?commons / ?default 같은 단독 플래그
-    const bare = sp.has('commons') ? 'commons' : (sp.has('default') ? 'default' : '');
-    // 해시(#commons, #mode=commons) 허용
-    const hashMatch =
-      (location.hash.match(/(?:^|#)(commons|default)\b/i) || [])[1] ||
-      (location.hash.match(/mode=(commons|default)/i) || [])[1] || '';
-    // 버튼/저장 상태 (최우선)
-    const gv = getPolicy();
-
-    const ov = (gv || qs || bare || hashMatch).toLowerCase();
-    if (ov === 'commons') return { source: 'commons' };
-    if (ov === 'default') return {};
-  }catch{}
-
-  if (IMAGE_SOURCE_POLICY === 'commons') return { source:'commons' };
-  if (IMAGE_SOURCE_POLICY === 'default') return {};
-  return {};
-}
 
   function renderSuggestions(items){
     const lang=guessLang(qEl.value.trim());
@@ -789,6 +720,7 @@ function decideImageOpts(){
       box.innerHTML=t+au+dl;
     }catch{ box.innerHTML=small('Failed to load translation.'); }
   }
+
   async function renderAll(word, uiLang, defPack, graph, imgs, refineInfo, antonyms, fallbackDict){
     cardEl.style.display='block';
     const base=imgs?.base;
@@ -797,26 +729,16 @@ function decideImageOpts(){
     $('vlx-ipa').textContent=ipa?`/${ipa.replace(/^\/|\/$/g,'')}/`:''; const audioEl=$('vlx-audio'); try{audioEl.pause();}catch{} audioEl.removeAttribute('src'); audioEl.load(); audioEl.style.display='none';
     if(audio){ audioEl.src=audio; audioEl.style.display=''; }
 
-    const mode = String(imgs?.mode||'');
-const urls = (imgs?.imageUrls || (imgs?.images||[]).map(i=>i.url) || []).slice(0,MAX_IMGS);
-$('vlx-imgs').innerHTML = urls.map(u=>`<div class="vlx-imgbox"><img src="${esc(u)}" loading="lazy" alt="${esc(word)}"></div>`).join('');
+    const mode=String(imgs?.mode||''); const urls=(imgs?.imageUrls || (imgs?.images||[]).map(i=>i.url) || []).slice(0,MAX_IMGS);
+    $('vlx-imgs').innerHTML=urls.map(u=>`<div class="vlx-imgbox"><img src="${esc(u)}" loading="lazy" alt="${esc(word)}"></div>`).join('');
+    const caption = mode ? `image mode: ${mode}` : '';
+    const aiChip = (mode.toLowerCase().startsWith('ai') && base)?` <span class="vlx-tag">AI: ${esc(base)}</span>`:'';
+    const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase)?` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>`:'';
+    $('vlx-img-caption').innerHTML=(caption?`<span class="vlx-tag">${caption}</span>`:'')+aiChip+refinedChip;
 
-// 캡션/태그
-const caption = mode ? `image mode: ${mode}` : '';
-const aiChip = (mode.toLowerCase().startsWith('ai') && base)?` <span class="vlx-tag">AI: ${esc(base)}</span>`:'';
-const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase)?` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>`:'';
-const policyChip = ` <span class="vlx-tag">${isCommonsMode() ? 'Commons only' : 'Auto'}</span>`;
-$('vlx-img-caption').innerHTML = (caption?`<span class="vlx-tag">${caption}</span>`:'') + policyChip + aiChip + refinedChip;
-
-// 플랜/쿼터 토스트: AI 이미지일 때만
-const qNote = $('vlx-quota');
-if (mode.toLowerCase().startsWith('ai') && !isCommonsMode()) {
-  qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en');
-  qNote.style.display = 'inline-flex';
-} else {
-  qNote.style.display = 'none';
-}
-
+    const qNote = $('vlx-quota');
+    qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en');
+    qNote.style.display = 'inline-flex';
 
     const modeTag=$('vlx-mode'); if(mode){ modeTag.textContent=mode; modeTag.style.display='inline-block'; } else modeTag.style.display='none';
     const aiTag=$('vlx-ai-pair');
@@ -839,7 +761,7 @@ if (mode.toLowerCase().startsWith('ai') && !isCommonsMode()) {
       (ant.length? `<div style="margin-top:6px"><strong>Ant:</strong> ${ant.map(chip).join(' ')}</div>`:'' ) || small('—')
     );
 
-    const showDer=/^[a-z]+$/i.test(word); const der=showDer? (()=>{
+    const showDer=/^[a-z]+$/i.test(word); const der=showDer?(()=>{
       const s=new Set(), x=word.toLowerCase(), push=v=>v&&s.add(v);
       push(x+'s'); push(x+'ed'); push(x+'ing'); push(x+'er'); push(x+'ers'); push(x+'ment'); push(x+'ments');
       if(x.endsWith('y')) push(x.slice(0,-1)+'ies');
@@ -884,42 +806,18 @@ if (mode.toLowerCase().startsWith('ai') && !isCommonsMode()) {
       isEnglish ? (async()=>{ try{ const r=await fetch('https://api.datamuse.com/words?rel_ant='+encodeURIComponent(raw)); return (await r.json()).slice(0,16).map(x=>x.word).filter(Boolean);}catch{return [];} })() : Promise.resolve([])
     ]);
 
-    // 먼저 imgs를 만든다
-let imgs = imgsR.status === 'fulfilled' ? (imgsR.value || {}) : {};
-    // ---- Commons 강제 보정 ----
-// ---- Commons 강제 보정 ----
-const commonsWanted = isCommonsMode();
-if (commonsWanted) {
-  const modeNow = String(imgs?.mode || '').toLowerCase();
-  const gotUrls =
-    (Array.isArray(imgs?.imageUrls) && imgs.imageUrls.length) ||
-    (Array.isArray(imgs?.images) && imgs.images.length);
-  const cameFromAI = modeNow.startsWith('ai');
+    let imgs = imgsR.status==='fulfilled' ? (imgsR.value||{}) : {};
+    const defs  = defR.status==='fulfilled' ? (defR.value||{}) : {};
+    const graph = graphR.status==='fulfilled'? (graphR.value||{}) : {};
+    const dict  = dictR.status==='fulfilled' ? (dictR.value||null): null;
+    const antonyms = antR.status==='fulfilled' ? (antR.value||[]) : [];
 
-  if (cameFromAI || !gotUrls) {
-    try {
-      const retry = await getVLImages(raw, { source: 'commons' });
-      const retryUrls =
-        (Array.isArray(retry?.imageUrls) && retry.imageUrls.length) ||
-        (Array.isArray(retry?.images) && retry.images.length);
-      imgs = retryUrls ? retry : { mode: 'commons', imageUrls: [] };
-    } catch {
-      imgs = { mode: 'commons', imageUrls: [] };
-    }
-  }
-}
-    const defs =defR.status==='fulfilled' ? (defR.value||{}) : {};
-    const graph=graphR.status==='fulfilled'? (graphR.value||{}) : {};
-    const dict = dictR.status==='fulfilled' ? (dictR.value||null): null;
-    const antonyms=antR.status==='fulfilled' ? (antR.value||[]) : [];
-
-    if(IMAGE_SOURCE_POLICY==='auto'){
+    if(IMG_MODE==='auto'){
       const noImgs = !(Array.isArray(imgs?.imageUrls)&&imgs.imageUrls.length) && !(Array.isArray(imgs?.images)&&imgs.images.length);
       if(noImgs){ try{ const retry=await getVLImages(raw,{source:'commons'}); if((retry?.imageUrls?.length)||(retry?.images?.length)) imgs=retry; }catch{} }
     }
 
-    const refineInfo = await refineImages(raw, uiLang, defs, imgs, graph, lemmaLang);
-imgs = refineInfo.imgs;
+    const refineInfo=await refineImages(raw, uiLang, defs, imgs, graph, lemmaLang); imgs=refineInfo.imgs;
 
     if((!imgs?.imageUrls?.length) && (!defs?.defs?.length)){
       statusEl.innerHTML='No content returned. If this site is on a different domain than <code>api.visuallexicon.org</code>, cookies may be blocked. Use a same-origin proxy (<code>window.VLX_PROXY</code>) or set <code>window.VLX_TOKEN</code>.';
