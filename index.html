@@ -29,7 +29,23 @@
     box-shadow:var(--vlx-shadow);
   }
 
-  .vlx-input-wrap{position:relative;flex:1;min-width:260px}
+  /* 입력쪽이 충분히 줄어들 수 있도록 */
+.vlx-input-wrap{
+  flex:1 1 480px;  /* 기본 폭 480px, 필요시 줄어듦 */
+  min-width:0;     /* flex overflow 방지. 중요! */
+}
+
+/* 버튼은 폭이 줄어들지 않게 */
+.vlx-btn, .vlx-btn2{
+  flex:0 0 auto;    /* shrink 금지 */
+  white-space:nowrap;
+}
+/* gap 보강용 – 필요 시만 적용 */
+.vlx-row > * + *{ margin-left:12px }
+@media (max-width:640px){
+  .vlx-row > * + *{ margin-left:0; margin-top:8px }
+}
+
   .vlx-input{
     flex:1;
     width:100%;
