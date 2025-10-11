@@ -309,12 +309,12 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
   const urlOf= p => { const s=join(API_BASE,p); try{ return new URL(s, location.origin).toString(); }catch{ return s; } };
 
   function sameSiteAsPage(apiBase){
-    try{
-      const api=new URL(apiBase, location.href);
-      const registrable = h => h.split('.').slice(-2).join('.');
-      return api.protocol===location.protocol && registrable(api.hostname)===registrable(location.hostname);
-    }catch{ return true; }
-  }
+   try{
+     const api = new URL(apiBase, location.href);
+     // 정확히 같은 오리진(프로토콜+호스트+포트)일 때만 true
+     return api.origin === location.origin;
+   }catch{ return false; }
+ }
   const SEND_COOKIES = sameSiteAsPage(API_BASE) && !AUTH_TOKEN;
 
   async function j(url, lang){
