@@ -36,7 +36,6 @@
   .vlx-suggest li{padding:10px 12px;cursor:pointer;border-radius:8px;display:flex;justify-content:space-between;gap:10px}
   .vlx-suggest li:hover,.vlx-suggest li.active{background:var(--vlx-chip)}
   .vlx-sug-roman{color:#999;font-size:12px;white-space:nowrap}
-  .vlx-sourcebar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
   .vlx-langbar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
   .vlx-langbtn{padding:6px 10px;border-radius:999px;border:1px solid var(--vlx-border);background:#fff;cursor:pointer;font-size:12px}
   .vlx-langbtn.active{background:var(--vlx-blue2);color:#fff;border-color:transparent}
@@ -55,7 +54,8 @@
   /* plan/quota 안내 토스트 */
 .vlx-quota{display:none;margin-top:8px}
 .vlx-quota.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
-
+.vlx-ghost{background:#fff;color:var(--vlx-blue1);border:1px solid var(--vlx-border)}
+.vlx-ghost.active{background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));color:#fff;border:0}
 </style>
 
 <div class="vlx-wrap">
@@ -65,6 +65,9 @@
       <div id="vlx-suggest" class="vlx-suggest"></div>
     </div>
     <button id="vlx-go" class="vlx-btn" type="button">Search</button>
+    <button id="vlx-img-toggle" class="vlx-btn vlx-ghost" type="button" aria-pressed="false">
+  Images: Auto
+</button>
     <div id="vlx-spin" class="vlx-spin"></div>
   </div>
   <div id="vlx-status" class="vlx-status"></div>
@@ -85,10 +88,6 @@
 <div id="vlx-quota" class="vlx-quota toast"></div>
 
     </div>
-    <div id="vlx-sourcebar" class="vlx-sourcebar" style="display:none" aria-label="Image source switch">
-  <button id="vlx-src-auto" class="vlx-langbtn active" type="button" title="Use automatic image source">Auto</button>
-  <button id="vlx-src-commons" class="vlx-langbtn" type="button" title="Fetch from Wikimedia Commons only">Commons</button>
-</div>
 
     <div class="vlx-section">
       <h4 style="margin:0 0 6px 0">Definitions</h4>
@@ -161,106 +160,64 @@
     { code:"de", label:"Deutsch" },{ code:"vi", label:"Tiếng Việt" },{ code:"tr", label:"Türkçe" },{ code:"ur", label:"اردو" }
   ];
 
+  // === Image policy state ===
+const IMG_POLICY_KEY = 'VLX_IMG_POLICY';
+const getPolicy = () => (window.VLX_IMG_POLICY || localStorage.getItem(IMG_POLICY_KEY) || '').toLowerCase(); // '' | 'commons'
+const setPolicy = (p) => { window.VLX_IMG_POLICY = p; localStorage.setItem(IMG_POLICY_KEY, p || ''); updatePolicyButton(); };
+const isCommonsMode = () => getPolicy() === 'commons';
+
+// === Toggle button binding ===
+const imgToggle = document.getElementById('vlx-img-toggle');
+function updatePolicyButton(){
+  if(!imgToggle) return;
+  const commons = isCommonsMode();
+  imgToggle.textContent = 'Images: ' + (commons ? 'Commons' : 'Auto');
+  imgToggle.classList.toggle('active', commons);
+  imgToggle.setAttribute('aria-pressed', String(commons));
+}
+updatePolicyButton();
+
+// setPolicy / updatePolicyButton 정의 아래 아무 곳에 추가
+(function bootstrapPolicyFromURL(){
+  try {
+    const sp = new URLSearchParams(location.search);
+    const qs = (sp.get('source') || sp.get('mode') || sp.get('policy') || sp.get('img') || '').toLowerCase();
+    const bare = sp.has('commons') ? 'commons' : (sp.has('default') ? 'default' : '');
+    const hashMatch =
+      (location.hash.match(/(?:^|#)(commons|default)\b/i) || [])[1] ||
+      (location.hash.match(/mode=(commons|default)/i) || [])[1] || '';
+    const ov = (qs || bare || hashMatch).toLowerCase();
+
+    // 이미 저장된 사용자가 없다면(처음 방문)만 URL을 반영
+    if (!getPolicy() && ov === 'commons') setPolicy('commons');
+  } catch {}
+  updatePolicyButton();
+})();
+
+
+if (imgToggle) {
+  imgToggle.addEventListener('click', () => {
+    setPolicy(isCommonsMode() ? '' : 'commons');  // flip
+    // URL 동기화 (?mode=commons 붙이기/빼기)
+    try{
+      const sp = new URLSearchParams(location.search);
+      if (isCommonsMode()) sp.set('mode','commons');
+      else { sp.delete('mode'); sp.delete('source'); sp.delete('policy'); sp.delete('img'); sp.delete('commons'); }
+      history.replaceState(null,'', location.pathname + (sp.toString()?('?'+sp.toString()):'') + location.hash);
+    }catch{}
+    if (qEl.value.trim()) run(); // 검색어 있으면 즉시 재검색
+  });
+
+  // 단축키: Ctrl/Cmd/Alt + C → 토글
+  window.addEventListener('keydown', (e)=>{
+    const k = (e.key||'').toLowerCase();
+    if (k === 'c' && (e.ctrlKey||e.metaKey||e.altKey)) { e.preventDefault(); imgToggle.click(); }
+  });
+}
+
+
   // ---------- Shorthands ----------
   const $ = id => document.getElementById(id);
-
-    // ---------- [ADD] Image source switching state & helpers ----------
-  const STATE = { last:null, imgSourceOverride:null }; // {word, uiLang, defPack, graph, antonyms, dict}
-  // STATE 바로 아래에 추가
-try{
-  const sp = new URLSearchParams(location.search);
-  const ov = (sp.get('source')||'').toLowerCase() || ((location.hash.match(/#(commons|default)/)||[])[1]||'');
-  if (ov === 'commons' || IMAGE_SOURCE_POLICY === 'commons') {
-    STATE.imgSourceOverride = 'commons';
-  }
-  // URL/정책에 없으면 저장된 사용자 선택 복원
- if (!STATE.imgSourceOverride) {
-   try{
-     const saved = localStorage.getItem('vlx_img_source');
-     if (saved === 'commons') STATE.imgSourceOverride = 'commons';
-   }catch{}
- }
-}catch{}
-
-  function setSourcebarVisible(v){
-    const bar=document.getElementById('vlx-sourcebar');
-    if(bar) bar.style.display = v ? 'flex' : 'none';
-  }
-  function updateSourcebarActive(){
-    const isCommons = STATE.imgSourceOverride==='commons';
-    const btnAuto = document.getElementById('vlx-src-auto');
-    const btnCommons = document.getElementById('vlx-src-commons');
-    if(btnCommons){
-    btnCommons.classList.toggle('active', isCommons);
-   btnCommons.setAttribute('aria-pressed', String(isCommons));
-  }
-  if(btnAuto){
-    btnAuto.classList.toggle('active', !isCommons);
-   btnAuto.setAttribute('aria-pressed', String(!isCommons));
-  }
-  }
-
-  // 이미지 영역만 다시 그리는 작은 렌더러
-  function renderImagesOnly(word, imgs, refineInfo){
-    const base = imgs?.base;
-    $('vlx-word').textContent = (base && base!==word) ? `${word} (${base})` : word;
-
-    const mode = String(imgs?.mode||'');
-    const urls = (imgs?.imageUrls || (imgs?.images||[]).map(i=>i.url) || []).slice(0, MAX_IMGS);
-    $('vlx-imgs').innerHTML = urls.map(u=>`<div class="vlx-imgbox"><img src="${escAttr(u)}" loading="lazy" alt="${escAttr(word)}"></div>`).join('');
-
-    const caption = mode ? `image mode: ${esc(mode)}` : '';
-    const aiChip = (mode.toLowerCase().startsWith('ai') && base) ? ` <span class="vlx-tag">AI: ${esc(base)}</span>` : '';
-    const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase) ? ` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>` : '';
-    $('vlx-img-caption').innerHTML = (caption?`<span class="vlx-tag">${caption}</span>`:'') + aiChip + refinedChip;
-
-    const modeTag = $('vlx-mode');
-    if(mode){ modeTag.textContent = mode; modeTag.style.display='inline-block'; } else { modeTag.style.display='none'; }
-    const aiTag = $('vlx-ai-pair');
-    if(mode.toLowerCase().startsWith('ai') && base){ aiTag.textContent=`AI: ${base}`; aiTag.style.display='inline-block'; }
-    else if(refineInfo?.refined && refineInfo.phrase){ aiTag.textContent=`refined: ${refineInfo.phrase}`; aiTag.style.display='inline-block'; }
-    else aiTag.style.display='none';
-
-    // 요금제 안내 토스트는 유지 (영역을 갈아낄 때도 그대로 보여주기)
-    const qNote = $('vlx-quota');
-    if(qNote){ qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en'); qNote.style.display='inline-flex'; }
-  }
-
-  // 현재 단어 기준으로 source override 사용해 이미지만 새로 불러오기
-  async function fetchAndRenderSource(source){  // source: 'commons' | null
-    if(!STATE.last) return;
-    try{
-      $('vlx-spin').style.display='inline-block';
-      const imgs = await getVLImages(STATE.last.word, source ? {source} : undefined);
-      const refineInfo = source ? {refined:false, phrase:null} : null;
-      renderImagesOnly(STATE.last.word, imgs || {}, refineInfo);
-    }finally{
-      $('vlx-spin').style.display='none';
-    }
-  }
-
-  // 버튼 핸들러 바인딩 (DOM 준비 이후)
-  addEventListener('DOMContentLoaded', ()=>{
-    const bAuto = document.getElementById('vlx-src-auto');
-    const bCommons = document.getElementById('vlx-src-commons');
-
-    if(bCommons){
-      bCommons.addEventListener('click', async ()=>{
-        STATE.imgSourceOverride = 'commons';
-        try{ localStorage.setItem('vlx_img_source','commons'); }catch{}
-        updateSourcebarActive();
-        await fetchAndRenderSource('commons');
-      });
-    }
-    if(bAuto){
-      bAuto.addEventListener('click', async ()=>{
-        STATE.imgSourceOverride = null;
-        try{ localStorage.setItem('vlx_img_source','auto'); }catch{}
-        updateSourcebarActive();
-        await fetchAndRenderSource(null); // 다시 auto로
-      });
-    }
-  });
 
   // ---- Plan/Quota 안내 문구 (로케일 대응) ----
 const PLAN_URL = 'https://www.visuallexicon.org/subscription';
@@ -277,16 +234,9 @@ function quotaMessage(lang){
   const qEl=$('vlx-q'), goEl=$('vlx-go'), sugEl=$('vlx-suggest');
 
   const small = s => `<div class="vlx-small">${s}</div>`;
-  const chip  = s => `<span class="vlx-chip">${esc(s)}</span>`;
- const li    = s => `<li>${esc(s)}</li>`;
-  // 텍스트 노드용 이스케이프
-  const esc   = s => (s||'').replace(/[&<>]/g, m => (
-    {'&':'&amp;','<':'&lt;','>':'&gt;'}[m]
-  ));
-  // 속성값(img/audio/src, data-*)용 이스케이프
-  const escAttr = s => (s||'').replace(/[&<>"']/g, m => (
-     {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
-   ));
+  const chip  = s => `<span class="vlx-chip">${s}</span>`;
+  const li    = s => `<li>${s}</li>`;
+  const esc   = s => (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
   const uniq  = a => Array.from(new Set((a||[]).filter(Boolean)));
   const debounce=(fn,ms=400)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};};
 
@@ -356,18 +306,7 @@ function quotaMessage(lang){
     if(opts.source) u.searchParams.set('source', String(opts.source));
     return j(u.toString(), getUiLang(word));
   }
-  function decideImageOpts(){
-    if (STATE.imgSourceOverride === 'commons') return { source:'commons' };
-      try{
-      const sp=new URLSearchParams(location.search);
-      const ov=(sp.get('source')||'').toLowerCase() || ((location.hash.match(/#(commons|default)/)||[])[1]||'');
-      if(ov==='commons') return {source:'commons'};
-      if(ov==='default') return {};
-    }catch{}
-    if(IMAGE_SOURCE_POLICY==='commons') return {source:'commons'};
-    if(IMAGE_SOURCE_POLICY==='default') return {};
-    return {};
-  }
+
   function getVLGraph(word, lemmaLang){
     const lang=canonLang(lemmaLang||'en');
     const u=new URL(urlOf('graph'));
@@ -750,13 +689,36 @@ function quotaMessage(lang){
   function romanizeJa(str){ let hira=kataToHira(str); hira=hira.replace(/っ([か-ぢつ-もやゆよら-ろわゐゑをんが-ぽ])/g,(_,n)=>{ const r=JA_MAP[n]||''; return (r[0]||'')+n; });
     let out=''; for(let i=0;i<hira.length;i++){ const two=hira.slice(i,i+2); if(JA_MAP[two]){ out+=JA_MAP[two]; i++; continue; } const ch=hira[i];
       if(ch==='ー'){ const prev=out[out.length-1]||''; out+=prev; continue; } out+=(JA_MAP[ch]||ch); } return out; }
+function decideImageOpts(){
+  try{
+    const sp = new URLSearchParams(location.search);
+    // 다양한 키 허용
+    const qs = (sp.get('source') || sp.get('mode') || sp.get('policy') || sp.get('img') || '').toLowerCase();
+    // ?commons / ?default 같은 단독 플래그
+    const bare = sp.has('commons') ? 'commons' : (sp.has('default') ? 'default' : '');
+    // 해시(#commons, #mode=commons) 허용
+    const hashMatch =
+      (location.hash.match(/(?:^|#)(commons|default)\b/i) || [])[1] ||
+      (location.hash.match(/mode=(commons|default)/i) || [])[1] || '';
+    // 버튼/저장 상태 (최우선)
+    const gv = getPolicy();
+
+    const ov = (gv || qs || bare || hashMatch).toLowerCase();
+    if (ov === 'commons') return { source: 'commons' };
+    if (ov === 'default') return {};
+  }catch{}
+
+  if (IMAGE_SOURCE_POLICY === 'commons') return { source:'commons' };
+  if (IMAGE_SOURCE_POLICY === 'default') return {};
+  return {};
+}
 
   function renderSuggestions(items){
     const lang=guessLang(qEl.value.trim());
     if(!SHOW_SUGGESTIONS || !items.length){ sugEl.style.display='none'; sugEl.innerHTML=''; return; }
     sugEl.innerHTML=`<ul>${items.map(w=>{
-      const rom=/[가-힣ぁ-ゔァ-ヴー々〆〤一-龥]/.test(w)?romanForDisplay(lang,w):''; return `<li data-word="${escAttr(w)}"><span>${esc(w)}</span>${rom?`<span class="vlx-sug-roman">${esc(rom)}</span>`:''}</li>`;
-     }).join('')}</ul>`;
+      const rom=/[가-힣ぁ-ゔァ-ヴー々〆〤一-龥]/.test(w)?romanForDisplay(lang,w):''; return `<li data-word="${esc(w)}"><span>${esc(w)}</span>${rom?`<span class="vlx-sug-roman">${esc(rom)}</span>`:''}</li>`;
+    }).join('')}</ul>`;
     sugEl.style.display='block';
     sugEl.querySelectorAll('li').forEach(li=>li.addEventListener('click',()=>{ qEl.value=li.dataset.word||li.textContent; hideSuggestions(); run(); }));
   }
@@ -766,7 +728,7 @@ function quotaMessage(lang){
   function mountLangBar(){
     if(trans.mounted) return;
     const bar=$('vlx-trans-lang');
-    bar.innerHTML=LANG_OPTIONS.map(o=>`<button class="vlx-langbtn" data-lang="${o.code}" title="${escAttr(o.label)}">${esc(o.label)}</button>`).join('');
+    bar.innerHTML=LANG_OPTIONS.map(o=>`<button class="vlx-langbtn" data-lang="${o.code}" title="${esc(o.label)}">${esc(o.label)}</button>`).join('');
     bar.addEventListener('click', e=>{
       const btn=e.target.closest('.vlx-langbtn'); if(!btn) return;
       trans.lang=btn.dataset.lang||'en';
@@ -786,7 +748,7 @@ function quotaMessage(lang){
       const data=await fetchDefForLang(word, trans.lang) || {};
       const defs=(data?.definitionsTranslated?.length?data.definitionsTranslated:data.definitions)||[];
       const t=data.translation?`<p style="margin:.25rem 0;font-weight:600">${esc(data.translation)}</p>`:'';
-      const au=data.audio?`<audio controls preload="metadata" style="width:100%;margin:.25rem 0" src="${escAttr(data.audio)}"></audio>`:'';
+      const au=data.audio?`<audio controls preload="metadata" style="width:100%;margin:.25rem 0" src="${esc(data.audio)}"></audio>`:'';
       const dl=defs.length?`<ul style="padding-left:1rem;margin:.25rem 0">${defs.slice(0,8).map(d=>`<li>${esc(d)}</li>`).join('')}</ul>`:small('No translated definitions.');
       box.innerHTML=t+au+dl;
     }catch{ box.innerHTML=small('Failed to load translation.'); }
@@ -799,15 +761,26 @@ function quotaMessage(lang){
     $('vlx-ipa').textContent=ipa?`/${ipa.replace(/^\/|\/$/g,'')}/`:''; const audioEl=$('vlx-audio'); try{audioEl.pause();}catch{} audioEl.removeAttribute('src'); audioEl.load(); audioEl.style.display='none';
     if(audio){ audioEl.src=audio; audioEl.style.display=''; }
 
-    const mode=String(imgs?.mode||''); const urls=(imgs?.imageUrls || (imgs?.images||[]).map(i=>i.url) || []).slice(0,MAX_IMGS);
-    $('vlx-imgs').innerHTML=urls.map(u=>`<div class="vlx-imgbox"><img src="${escAttr(u)}" loading="lazy" alt="${escAttr(word)}"></div>`).join('');
-    const caption = mode ? `image mode: ${esc(mode)}` : '';
-    const aiChip = (mode.toLowerCase().startsWith('ai') && base) ? ` <span class="vlx-tag">AI: ${esc(base)}</span>` : '';
- const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase) ? ` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>` : '';
-    $('vlx-img-caption').innerHTML=(caption?`<span class="vlx-tag">${caption}</span>`:'')+aiChip+refinedChip;
+    const mode = String(imgs?.mode||'');
+const urls = (imgs?.imageUrls || (imgs?.images||[]).map(i=>i.url) || []).slice(0,MAX_IMGS);
+$('vlx-imgs').innerHTML = urls.map(u=>`<div class="vlx-imgbox"><img src="${esc(u)}" loading="lazy" alt="${esc(word)}"></div>`).join('');
+
+// 캡션/태그
+const caption = mode ? `image mode: ${mode}` : '';
+const aiChip = (mode.toLowerCase().startsWith('ai') && base)?` <span class="vlx-tag">AI: ${esc(base)}</span>`:'';
+const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase)?` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>`:'';
+const policyChip = ` <span class="vlx-tag">${isCommonsMode() ? 'Commons only' : 'Auto'}</span>`;
+$('vlx-img-caption').innerHTML = (caption?`<span class="vlx-tag">${caption}</span>`:'') + policyChip + aiChip + refinedChip;
+
+// 플랜/쿼터 토스트: AI 이미지일 때만
 const qNote = $('vlx-quota');
-qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en');
-qNote.style.display = 'inline-flex';
+if (mode.toLowerCase().startsWith('ai') && !isCommonsMode()) {
+  qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en');
+  qNote.style.display = 'inline-flex';
+} else {
+  qNote.style.display = 'none';
+}
+
 
     const modeTag=$('vlx-mode'); if(mode){ modeTag.textContent=mode; modeTag.style.display='inline-block'; } else modeTag.style.display='none';
     const aiTag=$('vlx-ai-pair');
@@ -817,7 +790,7 @@ qNote.style.display = 'inline-flex';
 
     const defs=(defPack?.defs||[]).slice(0,3);
     setHTML('vlx-defs', defs.length? `<ul class="vlx-list">${defs.map(li).join('')}</ul>` : small('No definition found.'));
-   setHTML('vlx-def-source', defPack?.source ? `Source: ${esc(defPack.source)}` : '');
+    setHTML('vlx-def-source', defPack?.source ? `Source: ${defPack.source}` : '');
 
     const pos=defPack?.pos || [];
     setHTML('vlx-pos', pos.length? pos.map(chip).join('') : small('—'));
@@ -875,7 +848,30 @@ qNote.style.display = 'inline-flex';
       isEnglish ? (async()=>{ try{ const r=await fetch('https://api.datamuse.com/words?rel_ant='+encodeURIComponent(raw)); return (await r.json()).slice(0,16).map(x=>x.word).filter(Boolean);}catch{return [];} })() : Promise.resolve([])
     ]);
 
-    let imgs=imgsR.status==='fulfilled' ? (imgsR.value||{}) : {};
+    // 먼저 imgs를 만든다
+let imgs = imgsR.status === 'fulfilled' ? (imgsR.value || {}) : {};
+    // ---- Commons 강제 보정 ----
+// ---- Commons 강제 보정 ----
+const commonsWanted = isCommonsMode();
+if (commonsWanted) {
+  const modeNow = String(imgs?.mode || '').toLowerCase();
+  const gotUrls =
+    (Array.isArray(imgs?.imageUrls) && imgs.imageUrls.length) ||
+    (Array.isArray(imgs?.images) && imgs.images.length);
+  const cameFromAI = modeNow.startsWith('ai');
+
+  if (cameFromAI || !gotUrls) {
+    try {
+      const retry = await getVLImages(raw, { source: 'commons' });
+      const retryUrls =
+        (Array.isArray(retry?.imageUrls) && retry.imageUrls.length) ||
+        (Array.isArray(retry?.images) && retry.images.length);
+      imgs = retryUrls ? retry : { mode: 'commons', imageUrls: [] };
+    } catch {
+      imgs = { mode: 'commons', imageUrls: [] };
+    }
+  }
+}
     const defs =defR.status==='fulfilled' ? (defR.value||{}) : {};
     const graph=graphR.status==='fulfilled'? (graphR.value||{}) : {};
     const dict = dictR.status==='fulfilled' ? (dictR.value||null): null;
@@ -886,7 +882,8 @@ qNote.style.display = 'inline-flex';
       if(noImgs){ try{ const retry=await getVLImages(raw,{source:'commons'}); if((retry?.imageUrls?.length)||(retry?.images?.length)) imgs=retry; }catch{} }
     }
 
-    const refineInfo=await refineImages(raw, uiLang, defs, imgs, graph, lemmaLang); imgs=refineInfo.imgs;
+    const refineInfo = await refineImages(raw, uiLang, defs, imgs, graph, lemmaLang);
+imgs = refineInfo.imgs;
 
     if((!imgs?.imageUrls?.length) && (!defs?.defs?.length)){
       statusEl.innerHTML='No content returned. If this site is on a different domain than <code>api.visuallexicon.org</code>, cookies may be blocked. Use a same-origin proxy (<code>window.VLX_PROXY</code>) or set <code>window.VLX_TOKEN</code>.';
@@ -894,10 +891,6 @@ qNote.style.display = 'inline-flex';
 
     spinEl.style.display='none';
     renderAll(raw, uiLang, defs, graph, imgs, refineInfo, antonyms, dict);
-        // [ADD] 스위처 상태/표시 초기화
-    STATE.last = { word: raw, uiLang, defPack: defs, graph, antonyms, dict };
-    setSourcebarVisible(true);
-    updateSourcebarActive();
   }
 
   // ---------- Events ----------
