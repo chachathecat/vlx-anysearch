@@ -5,15 +5,55 @@
 
 <style>
   :root{ --vlx-accent:#111; --vlx-blue1:#2A6EF2; --vlx-blue2:#6B8CFF; --vlx-muted:#666; --vlx-border:#e9e9ee; --vlx-bg:#fafafa; --vlx-chip:#f5f6f8; --vlx-radius:16px; --vlx-shadow:0 6px 18px rgba(0,0,0,.06); }
+
   .vlx-wrap{max-width:860px;margin:0 auto;padding:16px}
-  .vlx-row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
-  .vlx-input{flex:1;min-width:260px;padding:14px 16px;border:1px solid var(--vlx-border);border-radius:14px;font-size:16px;background:#fff;width:100%}
-  .vlx-btn{padding:12px 16px;border:0;border-radius:14px;color:#fff;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));box-shadow:var(--vlx-shadow)}
-  /* NEW: secondary button for image mode toggle */
-  .vlx-btn2{padding:12px 14px;border-radius:14px;border:1px solid var(--vlx-border);background:#fff;color:#111;font-weight:600;cursor:pointer;box-shadow:var(--vlx-shadow)}
+
+  /* 상단 검색 바: 한 번만 선언 + 항상 위로 */
+  .vlx-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    position:sticky;
+    top:0;
+    z-index:2000;
+    background:#fff;
+    padding:8px;
+    border-radius:14px;
+    box-shadow:var(--vlx-shadow);
+  }
+
+  .vlx-input-wrap{position:relative;flex:1;min-width:260px}
+  .vlx-input{
+    flex:1;
+    width:100%;
+    padding:14px 16px;
+    border:1px solid var(--vlx-border);
+    border-radius:14px;
+    font-size:16px;
+    background:#fff;
+    min-height:44px;
+  }
+
+  .vlx-btn{padding:12px 16px;border:0;border-radius:14px;color:#fff;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));box-shadow:var(--vlx-shadow);height:44px;display:inline-flex;align-items:center}
+  .vlx-btn2{padding:12px 14px;border-radius:14px;border:1px solid var(--vlx-border);background:#fff;color:#111;font-weight:600;cursor:pointer;box-shadow:var(--vlx-shadow);height:44px;display:inline-flex;align-items:center}
   .vlx-btn2.active{border-color:var(--vlx-blue1);color:var(--vlx-blue1)}
+
   .vlx-status{margin:10px 2px;color:var(--vlx-muted);font-size:14px}
-  .vlx-card{display:none;border:1px solid var(--vlx-border);border-radius:var(--vlx-radius);padding:18px;background:#fff;box-shadow:var(--vlx-shadow)}
+
+  /* 카드가 툴바보다 아래 레이어로 */
+  .vlx-card{
+    display:none;
+    position:relative;
+    z-index:100;
+    margin-top:12px;
+    border:1px solid var(--vlx-border);
+    border-radius:var(--vlx-radius);
+    padding:18px;
+    background:#fff;
+    box-shadow:var(--vlx-shadow);
+  }
+
   .vlx-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .vlx-head h2{margin:0;font-size:22px}
   .vlx-ipa{color:var(--vlx-muted)}
@@ -22,76 +62,62 @@
   .vlx-chip{display:inline-block;background:var(--vlx-chip);border-radius:999px;padding:4px 10px;margin:2px;font-size:13px}
   .vlx-small{color:var(--vlx-muted);font-size:14px;line-height:1.55}
   .vlx-list{margin:6px 0 0 0;padding-left:18px}
+
   .vlx-imggrid{display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:12px;margin-top:8px}
   .vlx-imgbox{aspect-ratio:1/1;width:100%;border-radius:12px;overflow:hidden;background:var(--vlx-bg);border:1px solid var(--vlx-border);position:relative}
   .vlx-imgbox img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
   .vlx-caption{color:#888;font-size:12px;margin-top:6px}
+
   .vlx-spin{display:none;width:18px;height:18px;border:2px solid #ddd;border-top-color:var(--vlx-blue1);border-radius:50%;animation:vlx-rot .9s linear infinite}
   @keyframes vlx-rot{to{transform:rotate(360deg)}}
+
   @media (max-width:720px){ .vlx-imggrid{ grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)) } }
   @media (max-width:420px){
     .vlx-imggrid{ grid-template-columns:repeat(2, 1fr) }
     .vlx-imggrid>.vlx-imgbox:last-child:nth-child(odd){ grid-column:1/-1;justify-self:center;max-width:260px;width:100% }
   }
-  .vlx-input-wrap{position:relative;flex:1}
-  .vlx-suggest{position:absolute;top:100%;left:0;right:0;margin-top:6px;background:#fff;border:1px solid var(--vlx-border);border-radius:12px;box-shadow:var(--vlx-shadow);max-height:260px;overflow:auto;z-index:50;display:none}
+
+  /* 자동완성 드롭다운이 모든 것 위에 */
+  .vlx-suggest{
+    position:absolute;
+    top:100%; left:0; right:0;
+    margin-top:6px;
+    background:#fff;
+    border:1px solid var(--vlx-border);
+    border-radius:12px;
+    box-shadow:var(--vlx-shadow);
+    max-height:260px;
+    overflow:auto;
+    z-index:3000;
+    display:none;
+  }
   .vlx-suggest ul{list-style:none;margin:0;padding:6px}
   .vlx-suggest li{padding:10px 12px;cursor:pointer;border-radius:8px;display:flex;justify-content:space-between;gap:10px}
   .vlx-suggest li:hover,.vlx-suggest li.active{background:var(--vlx-chip)}
   .vlx-sug-roman{color:#999;font-size:12px;white-space:nowrap}
+
   .vlx-langbar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
   .vlx-langbtn{padding:6px 10px;border-radius:999px;border:1px solid var(--vlx-border);background:#fff;cursor:pointer;font-size:12px}
   .vlx-langbtn.active{background:var(--vlx-blue2);color:#fff;border-color:transparent}
   .vlx-transbox{border:1px solid var(--vlx-border);border-radius:12px;padding:10px;background:#fff}
-  .vlx-3d{border:1px solid var(--vlx-border);border-radius:12px;background:var(--vlx-bg);height:360px;min-height:320px;overflow:hidden;position:relative}
+
+  .vlx-3d{border:1px solid var(--vlx-border);border-radius:12px;background:#fafafa;height:360px;min-height:320px;overflow:hidden;position:relative;z-index:1}
   .vlx-3d::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0b0f17,#101726,#0b0f17);background-size:200% 100%;animation:vlx-shimmer 1.6s linear infinite;opacity:0;transition:opacity .25s ease}
   .vlx-status.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
   .vlx-3d.loading::before{opacity:.8}
   @keyframes vlx-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
   .vlx-hintwrap{position:absolute;inset:0;pointer-events:none}
   .vlx-notice{position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:10px;background:rgba(15,23,42,.92);color:#e6eefc;border:1px solid rgba(148,163,184,.25);padding:10px 12px;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.25);backdrop-filter:blur(6px);pointer-events:auto;font-size:12px;line-height:1.4}
   .vlx-notice .vlx-dot{width:8px;height:8px;border-radius:999px;background:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.25)}
   .vlx-notice button{border:0;border-radius:999px;padding:6px 10px;background:#2A6EF2;color:#fff;font-weight:600;cursor:pointer}
   .vlx-notice a{color:#9ec1ff;text-decoration:underline}
+
   .vlx-caption .vlx-tag{display:inline-flex;align-items:center;gap:6px;background:#f5f6f8;color:#475569;border:1px solid var(--vlx-border);padding:3px 8px;border-radius:999px;font-size:12px}
   .vlx-quota{display:none;margin-top:8px}
   .vlx-quota.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
-  /* 기존 .vlx-row 정의를 이걸로 교체 */
-.vlx-row{
-  display:flex;
-  gap:10px;
-  align-items:center;          /* 가운데 정렬 */
-  flex-wrap:wrap;
-  position: sticky;            /* 항상 위에 고정 */
-  top: 8px;
-  z-index: 200;                /* 카드보다 위 */
-  background:#fff;             /* 고정 시 가독성 */
-  padding:8px;                 /* 살짝 여백 */
-  border-radius:14px;
-  box-shadow: var(--vlx-shadow);
-}
-
-/* 드롭다운이 카드 위로 올라오게 */
-.vlx-suggest{
-  position:absolute;
-  top:100%;
-  left:0; right:0;
-  margin-top:6px;
-  background:#fff;
-  border:1px solid var(--vlx-border);
-  border-radius:12px;
-  box-shadow:var(--vlx-shadow);
-  max-height:260px;
-  overflow:auto;
-  z-index: 1000;               /* 카드/툴바보다 더 위 */
-  display:none;
-}
-
-/* 버튼/인풋 높이 통일로 겹침 방지(선택) */
-.vlx-input{ min-height:44px }
-.vlx-btn, .vlx-btn2{ height:44px; display:inline-flex; align-items:center }
-
 </style>
+
 
 <div class="vlx-wrap">
   <div class="vlx-row">
