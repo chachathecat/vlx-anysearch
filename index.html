@@ -15,45 +15,36 @@
 }
 
   /* 상단 검색 바: 한 번만 선언 + 항상 위로 */
-  .vlx-row{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    flex-wrap:wrap;
-    position:sticky;
-    top:0;
-    z-index:2000;
-    background:#fff;
-    padding:8px;
-    border-radius:14px;
-    box-shadow:var(--vlx-shadow);
-  }
+.vlx-row{
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  position:sticky; top:0; z-index:2000;
+  background:#fff; padding:8px 10px; border-radius:999px;  /* 더 ‘바’처럼 */
+  box-shadow:var(--vlx-shadow);
+}
 
-  /* 입력쪽이 충분히 줄어들 수 있도록 */
-/* 입력쪽이 충분히 줄어들 수 있도록 */
+/* 인풋이 가로로 잘 늘어나도록 */
 .vlx-input-wrap{
   position: relative;
-  flex: 1 1 480px;  /* 남는 공간 차지 + 필요시 줄어듦 */
-  min-width: 0;     /* flex overflow 방지(매우 중요) */
+  flex: 1 1 480px;
+  min-width: 0;
 }
 
 
-/* 버튼은 폭이 줄어들지 않게 */
-.vlx-btn, .vlx-btn2{
-  flex:0 0 auto;    /* shrink 금지 */
-  white-space:nowrap;
-}
+/* 버튼은 그대로 */
+.vlx-btn, .vlx-btn2{ flex:0 0 auto; white-space:nowrap; }
 
-  .vlx-input{
-    flex:1;
-    width:100%;
-    padding:14px 16px;
-    border:1px solid var(--vlx-border);
-    border-radius:14px;
-    font-size:16px;
-    background:#fff;
-    min-height:44px;
-  }
+/* 인풋을 카드와 일체화: 배경/테두리 제거 */
+.vlx-input{
+  width:100%;
+  padding:12px 14px;
+  background:transparent;
+  border:0;
+  min-height:44px;
+}
+/* 포커스 링은 겉 카드에 표시 */
+.vlx-row:focus-within{
+  box-shadow:0 0 0 2px rgba(42,110,242,.28), var(--vlx-shadow);
+}
 
   .vlx-btn{padding:12px 16px;border:0;border-radius:14px;color:#fff;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));box-shadow:var(--vlx-shadow);height:44px;display:inline-flex;align-items:center}
   .vlx-btn2{padding:12px 14px;border-radius:14px;border:1px solid var(--vlx-border);background:#fff;color:#111;font-weight:600;cursor:pointer;box-shadow:var(--vlx-shadow);height:44px;display:inline-flex;align-items:center}
