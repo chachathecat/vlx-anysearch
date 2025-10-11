@@ -244,7 +244,7 @@ html, body, button, input, select, textarea,
     </div>
   </div>
 </div>
-
+<script>window.VLX_PROXY = '/vlx';</script>
 <script>
   // (Optional) override CDNs – set these BEFORE the script runs.
   window.VLX_3D_THREE_SRC = "https://chachathecat.github.io/vlx-static/vendor/three.min.js";
@@ -321,7 +321,7 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
      return api.origin === location.origin;
    }catch{ return false; }
  }
-  const SEND_COOKIES = sameSiteAsPage(API_BASE) && !AUTH_TOKEN;
+  const SEND_COOKIES = (new URL(API_BASE, location.href).origin === location.origin) && !AUTH_TOKEN;
 
   async function j(url, lang){
     const headers = { 'Accept-Language': lang || 'en' };
