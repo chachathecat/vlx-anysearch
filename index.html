@@ -56,6 +56,42 @@
 .vlx-quota.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
 .vlx-ghost{background:#fff;color:var(--vlx-blue1);border:1px solid var(--vlx-border)}
 .vlx-ghost.active{background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));color:#fff;border:0}
+  /* ==== spacing + focus ring fix ==== */
+
+/* 버튼과 입력 사이 간격 살짝 키우기 */
+.vlx-row{ gap:14px; align-items:center; }
+
+/* 기본 outline 제거 + 접근성 있는 커스텀 포커스 링 */
+.vlx-input:focus,
+.vlx-input:focus-visible{
+  outline: none;
+  border-color: var(--vlx-blue1);
+  box-shadow: 0 0 0 3px rgba(42,110,242,.25); /* 겹쳐 보여도 버튼을 덮지 않음 */
+}
+
+/* 버튼 포커스 링도 통일 */
+.vlx-btn:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(42,110,242,.35), var(--vlx-shadow);
+}
+
+/* 작은 화면에서는 줄바꿈해서 더 넉넉하게 */
+@media (max-width:640px){
+  .vlx-row{ flex-wrap:wrap; gap:10px; }
+  .vlx-input-wrap{ flex:1 1 100%; }
+  #vlx-go, #vlx-img-toggle{ margin-top:8px; }
+}
+
+/* 고대비(강제 색상) 모드 사용자 배려: 시스템 색으로 outline 유지 */
+@media (forced-colors: active){
+  .vlx-input:focus-visible,
+  .vlx-btn:focus-visible{
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
 </style>
 
 <div class="vlx-wrap">
