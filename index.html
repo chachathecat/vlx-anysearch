@@ -30,20 +30,18 @@
   }
 
   /* 입력쪽이 충분히 줄어들 수 있도록 */
+/* 입력쪽이 충분히 줄어들 수 있도록 */
 .vlx-input-wrap{
-  flex:1 1 480px;  /* 기본 폭 480px, 필요시 줄어듦 */
-  min-width:0;     /* flex overflow 방지. 중요! */
+  position: relative;
+  flex: 1 1 480px;  /* 남는 공간 차지 + 필요시 줄어듦 */
+  min-width: 0;     /* flex overflow 방지(매우 중요) */
 }
+
 
 /* 버튼은 폭이 줄어들지 않게 */
 .vlx-btn, .vlx-btn2{
   flex:0 0 auto;    /* shrink 금지 */
   white-space:nowrap;
-}
-/* gap 보강용 – 필요 시만 적용 */
-.vlx-row > * + *{ margin-left:12px }
-@media (max-width:640px){
-  .vlx-row > * + *{ margin-left:0; margin-top:8px }
 }
 
   .vlx-input{
@@ -62,6 +60,13 @@
   .vlx-btn2.active{border-color:var(--vlx-blue1);color:var(--vlx-blue1)}
 
   .vlx-status{margin:10px 2px;color:var(--vlx-muted);font-size:14px}
+
+  /* 전역 리셋(권장) */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* 혹은 국소 적용 */
+.vlx-input { box-sizing: border-box; }
+
 
   /* 카드가 툴바보다 아래 레이어로 */
   .vlx-card{
@@ -91,6 +96,16 @@
   .vlx-caption{color:#888;font-size:12px;margin-top:6px}
 
   .vlx-spin{display:none;width:18px;height:18px;border:2px solid #ddd;border-top-color:var(--vlx-blue1);border-radius:50%;animation:vlx-rot .9s linear infinite}
+
+
+/* gap 미지원 브라우저에서만 */
+@supports not (gap: 10px) {
+  .vlx-row > * + *{ margin-left:12px; }
+  @media (max-width:640px){
+    .vlx-row > * + *{ margin-left:0; margin-top:8px; }
+  }
+}
+
   @keyframes vlx-rot{to{transform:rotate(360deg)}}
 
   @media (max-width:720px){ .vlx-imggrid{ grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)) } }
