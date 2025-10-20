@@ -1,252 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<meta charset="utf-8" />
-<title>Visual Lexicon – Mini</title>
-
-<style>
-  :root{ --vlx-accent:#111; --vlx-blue1:#2A6EF2; --vlx-blue2:#6B8CFF; --vlx-muted:#666; --vlx-border:#e9e9ee; --vlx-bg:#fafafa; --vlx-chip:#f5f6f8; --vlx-radius:16px; --vlx-shadow:0 6px 18px rgba(0,0,0,.06); /* 새로 추가 */
-  --vlx-header-h: 64px; --vlx-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-              Roboto, "Noto Sans", "Apple SD Gothic Neo", "Malgun Gothic",
-              "Apple Color Emoji","Segoe UI Emoji", sans-serif;}
-html, body, button, input, select, textarea,
-.vlx-wrap, .vlx-btn, .vlx-chip, .vlx-small, .vlx-list, .vlx-langbtn {
-  font-family: var(--vlx-font);
-}
-  
-  .vlx-wrap{
-  max-width:860px; margin:0 auto;
-  padding:16px;
-  /* 헤더가 sticky로 붙을 때 카드가 가려지지 않도록 */
-  padding-top: calc(16px + var(--vlx-header-h));
-}
-
-  /* 상단 검색 바: 한 번만 선언 + 항상 위로 */
-.vlx-row{
-  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-  position:sticky; top:0; z-index:2000;
-  background:#fff; padding:8px 10px; border-radius:999px;  /* 더 ‘바’처럼 */
-  box-shadow:var(--vlx-shadow);
-}
-
-/* 인풋이 가로로 잘 늘어나도록 */
-.vlx-input-wrap{
-  position: relative;
-  flex: 1 1 480px;
-  min-width: 0;
-}
-
-
-/* 버튼은 그대로 */
-.vlx-btn, .vlx-btn2{ flex:0 0 auto; white-space:nowrap; }
-
-/* 인풋을 카드와 일체화: 배경/테두리 제거 */
-.vlx-input{
-  width:100%;
-  padding:12px 14px;
-  background:transparent;
-  border:0;
-  min-height:44px;
-}
-/* 포커스 링은 겉 카드에 표시 */
-.vlx-row:focus-within{
-  box-shadow:0 0 0 2px rgba(42,110,242,.28), var(--vlx-shadow);
-}
-
-  .vlx-btn{padding:12px 16px;border:0;border-radius:14px;color:#fff;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--vlx-blue1),var(--vlx-blue2));box-shadow:var(--vlx-shadow);height:44px;display:inline-flex;align-items:center}
-  .vlx-btn2{padding:12px 14px;border-radius:14px;border:1px solid var(--vlx-border);background:#fff;color:#111;font-weight:600;cursor:pointer;box-shadow:var(--vlx-shadow);height:44px;display:inline-flex;align-items:center}
-  .vlx-btn2.active{border-color:var(--vlx-blue1);color:var(--vlx-blue1)}
-
-  .vlx-status{margin:10px 2px;color:var(--vlx-muted);font-size:14px}
-
-  /* 전역 리셋(권장) */
-*, *::before, *::after { box-sizing: border-box; }
-
-/* 혹은 국소 적용 */
-.vlx-input { box-sizing: border-box; }
-
-
-  /* 카드가 툴바보다 아래 레이어로 */
-  .vlx-card{
-    display:none;
-    position:relative;
-    z-index:100;
-    margin-top:12px;
-    border:1px solid var(--vlx-border);
-    border-radius:var(--vlx-radius);
-    padding:18px;
-    background:#fff;
-    box-shadow:var(--vlx-shadow);
-  }
-
-  .vlx-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .vlx-head h2{margin:0;font-size:22px}
-  .vlx-ipa{color:var(--vlx-muted)}
-  .vlx-section{margin-top:12px}
-  .vlx-col2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .vlx-chip{display:inline-block;background:var(--vlx-chip);border-radius:999px;padding:4px 10px;margin:2px;font-size:13px}
-  .vlx-small{color:var(--vlx-muted);font-size:14px;line-height:1.55}
-  .vlx-list{margin:6px 0 0 0;padding-left:18px}
-
-  .vlx-imggrid{display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:12px;margin-top:8px}
-  .vlx-imgbox{aspect-ratio:1/1;width:100%;border-radius:12px;overflow:hidden;background:var(--vlx-bg);border:1px solid var(--vlx-border);position:relative}
-  .vlx-imgbox img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
-  .vlx-caption{color:#888;font-size:12px;margin-top:6px}
-
-  .vlx-spin{display:none;width:18px;height:18px;border:2px solid #ddd;border-top-color:var(--vlx-blue1);border-radius:50%;animation:vlx-rot .9s linear infinite}
-  /* 인풋 기본 포커스 테두리 제거 */
-.vlx-input:focus,
-.vlx-input:focus-visible{
-  outline: none;
-  box-shadow: none;
-}
-
-/* (선택) 버튼도 기본 포커스 테두리 제거 */
-.vlx-btn:focus-visible,
-.vlx-btn2:focus-visible{
-  outline: none;
-}
-
-/* 포커스는 바 전체에서 표시(이미 있으나, 살짝 더 또렷하게) */
-.vlx-row:focus-within{
-  box-shadow: 0 0 0 2px rgba(42,110,242,.28), var(--vlx-shadow);
-}
-
-
-
-/* gap 미지원 브라우저에서만 */
-@supports not (gap: 10px) {
-  .vlx-row > * + *{ margin-left:12px; }
-  @media (max-width:640px){
-    .vlx-row > * + *{ margin-left:0; margin-top:8px; }
-  }
-}
-
-  @keyframes vlx-rot{to{transform:rotate(360deg)}}
-
-  @media (max-width:720px){ .vlx-imggrid{ grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)) } }
-  @media (max-width:420px){
-    .vlx-imggrid{ grid-template-columns:repeat(2, 1fr) }
-    .vlx-imggrid>.vlx-imgbox:last-child:nth-child(odd){ grid-column:1/-1;justify-self:center;max-width:260px;width:100% }
-  }
-
-  /* 자동완성 드롭다운이 모든 것 위에 */
-  .vlx-suggest{
-    position:absolute;
-    top:100%; left:0; right:0;
-    margin-top:6px;
-    background:#fff;
-    border:1px solid var(--vlx-border);
-    border-radius:12px;
-    box-shadow:var(--vlx-shadow);
-    max-height:260px;
-    overflow:auto;
-    z-index:3000;
-    display:none;
-  }
-  .vlx-suggest ul{list-style:none;margin:0;padding:6px}
-  .vlx-suggest li{padding:10px 12px;cursor:pointer;border-radius:8px;display:flex;justify-content:space-between;gap:10px}
-  .vlx-suggest li:hover,.vlx-suggest li.active{background:var(--vlx-chip)}
-  .vlx-sug-roman{color:#999;font-size:12px;white-space:nowrap}
-
-  .vlx-langbar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
-  .vlx-langbtn{padding:6px 10px;border-radius:999px;border:1px solid var(--vlx-border);background:#fff;cursor:pointer;font-size:12px}
-  .vlx-langbtn.active{background:var(--vlx-blue2);color:#fff;border-color:transparent}
-  .vlx-transbox{border:1px solid var(--vlx-border);border-radius:12px;padding:10px;background:#fff}
-
-  .vlx-3d{border:1px solid var(--vlx-border);border-radius:12px;background:#fafafa;height:360px;min-height:320px;overflow:hidden;position:relative;z-index:1}
-  .vlx-3d::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0b0f17,#101726,#0b0f17);background-size:200% 100%;animation:vlx-shimmer 1.6s linear infinite;opacity:0;transition:opacity .25s ease}
-  .vlx-status.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
-  .vlx-3d.loading::before{opacity:.8}
-  @keyframes vlx-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-  .vlx-hintwrap{position:absolute;inset:0;pointer-events:none}
-  .vlx-notice{position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:10px;background:rgba(15,23,42,.92);color:#e6eefc;border:1px solid rgba(148,163,184,.25);padding:10px 12px;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.25);backdrop-filter:blur(6px);pointer-events:auto;font-size:12px;line-height:1.4}
-  .vlx-notice .vlx-dot{width:8px;height:8px;border-radius:999px;background:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.25)}
-  .vlx-notice button{border:0;border-radius:999px;padding:6px 10px;background:#2A6EF2;color:#fff;font-weight:600;cursor:pointer}
-  .vlx-notice a{color:#9ec1ff;text-decoration:underline}
-
-  .vlx-caption .vlx-tag{display:inline-flex;align-items:center;gap:6px;background:#f5f6f8;color:#475569;border:1px solid var(--vlx-border);padding:3px 8px;border-radius:999px;font-size:12px}
-  .vlx-quota{display:none;margin-top:8px}
-  .vlx-quota.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
-  #vlx-3d, #vlx-3d canvas{ position:relative; z-index:0; }
-</style>
-
-
-<div class="vlx-wrap">
-  <div class="vlx-row">
-    <div class="vlx-input-wrap">
-      <input id="vlx-q" class="vlx-input" placeholder="Type any word in ANY language…" autocomplete="off" />
-      <div id="vlx-suggest" class="vlx-suggest"></div>
-    </div>
-    <button id="vlx-go" class="vlx-btn" type="button">Search</button>
-    <!-- NEW: toggle button -->
-    <button id="vlx-img-toggle" class="vlx-btn2" type="button" aria-pressed="false" title="Toggle image source (Auto → Commons → Default)">Images: Auto</button>
-    <div id="vlx-spin" class="vlx-spin"></div>
-  </div>
-
-  <div id="vlx-status" class="vlx-status"></div>
-
-  <div id="vlx-card" class="vlx-card">
-    <div class="vlx-head">
-      <h2 id="vlx-word"></h2>
-      <span id="vlx-ipa" class="vlx-ipa"></span>
-      <audio id="vlx-audio" controls preload="none" style="display:none;height:32px"></audio>
-      <span id="vlx-mode" class="vlx-chip" style="display:none"></span>
-      <span id="vlx-ai-pair" class="vlx-chip" style="display:none"></span>
-    </div>
-
-    <div class="vlx-section">
-      <div id="vlx-imgs" class="vlx-imggrid"></div>
-      <div id="vlx-img-caption" class="vlx-caption"></div>
-      <div id="vlx-quota" class="vlx-quota toast"></div>
-    </div>
-
-    <div class="vlx-section">
-      <h4 style="margin:0 0 6px 0">Definitions</h4>
-      <div id="vlx-defs"></div>
-      <div id="vlx-def-source" class="vlx-caption"></div>
-    </div>
-
-    <div class="vlx-section vlx-col2">
-      <div>
-        <h4 style="margin:0 0 6px 0">Parts of Speech</h4>
-        <div id="vlx-pos"></div>
-      </div>
-      <div>
-        <h4 style="margin:0 0 6px 0">Synonyms / Antonyms</h4>
-        <div id="vlx-synant"></div>
-      </div>
-    </div>
-
-    <div class="vlx-section" id="sec-der">
-      <h4 style="margin:0 0 6px 0">Derivatives</h4>
-      <div id="vlx-der"></div>
-    </div>
-
-    <div class="vlx-section" id="sec-ex">
-      <h4 style="margin:0 0 6px 0">Examples</h4>
-      <div id="vlx-ex"></div>
-    </div>
-
-    <div class="vlx-section" id="sec-trans">
-      <h4 style="margin:0 0 6px 0">Translate / Target-language Definitions</h4>
-      <div id="vlx-trans-lang" class="vlx-langbar"></div>
-      <div id="vlx-trans-body" class="vlx-transbox"></div>
-    </div>
-
-    <div class="vlx-section" id="sec-3d">
-      <h4 style="margin:0 0 6px 0">3D Thesaurus</h4>
-      <div id="vlx-3d" class="vlx-3d"><div style="padding:10px;color:#888">Loading 3D graph…</div></div>
-    </div>
-
-    <div class="vlx-section">
-      <div id="vlx-ai-note" class="vlx-status toast" style="display:none"></div>
-    </div>
-  </div>
-</div>
-<script>window.VLX_PROXY = '/vlx';</script>
 <script>
-  // (Optional) override CDNs – set these BEFORE the script runs.
+  // Proxy to API on same origin (optional)
+  window.VLX_PROXY = '/vlx';
+  // Optional vendor CDNs (overrideable)
   window.VLX_3D_THREE_SRC = "https://chachathecat.github.io/vlx-static/vendor/three.min.js";
   window.VLX_3D_FG_SRC    = "https://chachathecat.github.io/vlx-static/vendor/3d-force-graph.min.js";
 
@@ -274,31 +29,35 @@ html, body, button, input, select, textarea,
   // ---------- Shorthands ----------
   const $ = id => document.getElementById(id);
 
-  // 헤더 높이만큼 레이아웃 보정 (sticky 겹침 방지)
-const headerEl = document.querySelector('.vlx-row');
-function applyHeaderGap(){
-  const h = (headerEl?.offsetHeight || 64);
-  document.documentElement.style.setProperty('--vlx-header-h', h + 'px');
-  // 스크롤로 앵커 이동할 때도 상단이 가려지지 않게
-  document.documentElement.style.scrollPaddingTop = h + 'px';
-  document.body.style.scrollPaddingTop = h + 'px';
-}
-applyHeaderGap();
-addEventListener('resize', applyHeaderGap);
-setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
+  // Header gap fix (sticky toolbar)
+  const headerEl = document.querySelector('.vlx-row');
+  function applyHeaderGap(){
+    const h = (headerEl?.offsetHeight || 64);
+    document.documentElement.style.setProperty('--vlx-header-h', h + 'px');
+    document.documentElement.style.scrollPaddingTop = h + 'px';
+    document.body.style.scrollPaddingTop = h + 'px';
+  }
+  applyHeaderGap();
+  addEventListener('resize', applyHeaderGap);
+  setTimeout(applyHeaderGap, 0);
 
+  // ---------- Tiny helpers (NEW) ----------
+  const sleep = (ms)=> new Promise(r=>setTimeout(r, ms));
 
-  // ---- Plan/Quota 안내 문구 (로케일 대응) ----
-  const PLAN_URL = 'https://www.visuallexicon.org/subscription';
-  function quotaMessage(lang){
-    const L = canonLang(lang||'en');
-    if (L==='ko') return `AnySearch 이미지 미리보기는 <strong>플랜별 할당량</strong>이 적용됩니다. 사용하려면 <a href="${PLAN_URL}" target="_blank" rel="noopener">구독</a>이 필요합니다.`;
-    if (L==='ja') return `AnySearch の画像プレビューにはプランごとの <strong>クォータ</strong>が適用されます。ご利用には<a href="${PLAN_URL}" target="_blank" rel="noopener">サブスクリプション</a>が必要です。`;
-    if (L==='zh' || L==='zh-hans') return `AnySearch 图片预览受 <strong>套餐配额</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">订阅</a>。`;
-    if (L==='zh-hant') return `AnySearch 圖片預覽受 <strong>方案額度</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">訂閱</a>。`;
-    return `AnySearch image previews are subject to plan quotas. A <a href="${PLAN_URL}" target="_blank" rel="noopener">subscription</a> is required.`;
+  // JSON fetch with short timeout (AbortController)
+  function fetchJSON(url, { timeout=1500, ...init } = {}) {
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort('timeout'), timeout);
+    return fetch(url, { ...init, signal: ctrl.signal })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .finally(()=> clearTimeout(t));
   }
 
+  // Race a promise with a timeout; if timeout, return fallback
+  const settleWith = (p, ms, fallback) =>
+    Promise.race([ p, new Promise(res => setTimeout(()=>res(fallback), ms)) ]);
+
+  // ---------- API helper to our Worker ----------
   const statusEl=$('vlx-status'), cardEl=$('vlx-card'), spinEl=$('vlx-spin');
   const qEl=$('vlx-q'), goEl=$('vlx-go'), sugEl=$('vlx-suggest');
   const imgToggle=$('vlx-img-toggle');
@@ -310,17 +69,15 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
   const uniq  = a => Array.from(new Set((a||[]).filter(Boolean)));
   const debounce=(fn,ms=400)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};};
 
-  // ---------- Fetch helpers ----------
   const join=(b,p)=> (b.endsWith('/')?b.slice(0,-1):b) + (p.startsWith('/')?p:('/'+p));
   const urlOf= p => { const s=join(API_BASE,p); try{ return new URL(s, location.origin).toString(); }catch{ return s; } };
 
   function sameSiteAsPage(apiBase){
-   try{
-     const api = new URL(apiBase, location.href);
-     // 정확히 같은 오리진(프로토콜+호스트+포트)일 때만 true
-     return api.origin === location.origin;
-   }catch{ return false; }
- }
+    try{
+      const api = new URL(apiBase, location.href);
+      return api.origin === location.origin;
+    }catch{ return false; }
+  }
   const SEND_COOKIES = (new URL(API_BASE, location.href).origin === location.origin) && !AUTH_TOKEN;
 
   async function j(url, lang){
@@ -376,6 +133,14 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     if(opts.source) u.searchParams.set('source', String(opts.source));
     return j(u.toString(), getUiLang(word));
   }
+  function getVLGraph(word, lemmaLang){
+    const lang=canonLang(lemmaLang||'en');
+    const u=new URL(urlOf('graph'));
+    u.searchParams.set('lemma', word.trim().toLowerCase());
+    u.searchParams.set('k','12');
+    u.searchParams.set('lang', lang);
+    return j(u.toString(), lang);
+  }
 
   // --- MODE TOGGLE (Auto/Commons/Default) ---
   let IMG_MODE = (localStorage.getItem('VLX_IMG_MODE') || DEFAULT_IMAGE_POLICY || 'auto').toLowerCase();
@@ -394,14 +159,9 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     applyModeLabel();
     if(qEl.value.trim()) run();
   });
-
-  // Decide image options (button override > URL params > default policy)
   function decideImageOpts(){
-    // 1) explicit user toggle wins
     if (IMG_MODE === 'commons') return { source:'commons' };
     if (IMG_MODE === 'default') return {};
-
-    // 2) URL / hash overrides (when in Auto)
     try{
       const sp = new URLSearchParams(location.search);
       const qs = (sp.get('source') || sp.get('mode') || sp.get('policy') || sp.get('img') || '').toLowerCase();
@@ -412,22 +172,12 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
       if (ov === 'commons') return { source:'commons' };
       if (ov === 'default') return {};
     }catch{}
-
-    // 3) global fallback policy
     if (DEFAULT_IMAGE_POLICY === 'commons') return { source:'commons' };
     if (DEFAULT_IMAGE_POLICY === 'default') return {};
     return {};
   }
 
-  function getVLGraph(word, lemmaLang){
-    const lang=canonLang(lemmaLang||'en');
-    const u=new URL(urlOf('graph'));
-    u.searchParams.set('lemma', word.trim().toLowerCase());
-    u.searchParams.set('k','12');
-    u.searchParams.set('lang', lang);
-    return j(u.toString(), lang);
-  }
-
+  // ---------- Definition drivers (SHORT-TIMEOUTS) ----------
   const SCORE={KO_STD:0.95,JISHO:0.9,MOE:0.9,DICTAPI:0.85,DWDS:0.8,DA:0.8,TDK:0.85,YANDEX:0.75,WIKI:0.65};
   const TTL={GOOD:86400,OK:43200,WEAK:3600};
   const pack=(ok,defs,src,extra={})=>Object.assign({ok,defs:(defs||[]).filter(Boolean).slice(0,5),source:src,score:0.6,ttlSec:TTL.OK},extra);
@@ -438,11 +188,10 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     if(!j?.exp||Date.now()>j.exp){ localStorage.removeItem(k); return null; } return j.data; }catch{ return null; } };
   const writeCache=(k,v,ttl)=>{ try{ localStorage.setItem(k, JSON.stringify({exp:Date.now()+((ttl||3600)*1000), data:v})); }catch{} };
 
-  // --- Dictionary drivers (unchanged, trimmed for brevity in this comment) ---
   async function dictionaryApiDevDriver(term){
     try{
-      const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(term));
-      if(!r.ok) return null; const j=await r.json();
+      const j = await fetchJSON('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(term), { timeout:1500 }).catch(()=>null);
+      if(!j) return null;
       const out={ipa:'',ipaAudio:'',pos:new Set(),syn:new Set(),ant:new Set(),examples:[],defs:[]};
       for(const e of j){
         for(const ph of (e.phonetics||[])){ if(!out.ipa&&ph.text) out.ipa=ph.text; if(!out.ipaAudio&&ph.audio) out.ipaAudio=ph.audio; }
@@ -468,7 +217,8 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     if(!KO_STD_KEY) return null;
     try{
       const u=`https://stdict.korean.go.kr/api/search.do?key=${encodeURIComponent(KO_STD_KEY)}&q=${encodeURIComponent(term)}&req_type=xml`;
-      const r=await fetch(u); if(!r.ok) return null; const txt=await r.text();
+      const txt = await fetch(u, { signal: AbortSignal.timeout?.(1800) }).then(r=>r.ok?r.text():null).catch(()=>null);
+      if(!txt) return null;
       const dom=new DOMParser().parseFromString(txt,'text/xml');
       const first=dom.querySelector('item, channel item'); if(!first) return null;
       let defs=[]; first.querySelectorAll('sense definition').forEach(d=>d.textContent&&defs.push(d.textContent.trim()));
@@ -480,8 +230,8 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
   }
   async function jishoDriver(term){
     try{
-      const r=await fetch('https://jisho.org/api/v1/search/words?keyword='+encodeURIComponent(term));
-      if(!r.ok) return null; const j=await r.json(); const d=j?.data?.[0]; if(!d) return null;
+      const j = await fetchJSON('https://jisho.org/api/v1/search/words?keyword='+encodeURIComponent(term), { timeout:1500 }).catch(()=>null);
+      if(!j) return null; const d=j?.data?.[0]; if(!d) return null;
       const defs=(d.senses||[]).flatMap(s=>s.english_definitions||[]).slice(0,5);
       const pos=(d.senses?.[0]?.parts_of_speech||[]);
       if(!defs.length) return null; return pack(true, defs, 'Jisho.org', {score:SCORE.JISHO,pos,ttlSec:TTL.GOOD});
@@ -493,7 +243,8 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
       `https://www.moedict.tw/raw/${encodeURIComponent(term)}`
     ]){
       try{
-        const r=await fetch(u); if(!r.ok) continue; const j=await r.json();
+        const j = await fetchJSON(u, { timeout:1800 }).catch(()=>null);
+        if(!j) continue;
         const het=(j.heteronyms||[])[0]||{}; const defs=(het.definitions||[]).map(d=>d.def).filter(Boolean).slice(0,5);
         if(defs.length) return pack(true, defs, 'MoeDict', {score:SCORE.MOE,pos:(het?.type?[het.type]:[]),ttlSec:TTL.GOOD});
       }catch{}
@@ -501,8 +252,11 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
   }
   async function dwdsDriver(term){
     try{
-      const r=await fetch(`https://www.dwds.de/api/wb/snippet/?q=${encodeURIComponent(term)}`, {headers: DWDS_TOKEN?{Authorization:`Token ${DWDS_TOKEN}`} : undefined});
-      if(!r.ok) return null; const j=await r.json(); const it=(j?.items||[])[0];
+      const j = await fetchJSON(`https://www.dwds.de/api/wb/snippet/?q=${encodeURIComponent(term)}`, {
+        headers: DWDS_TOKEN?{Authorization:`Token ${DWDS_TOKEN}`} : undefined,
+        timeout: 1500
+      }).catch(()=>null);
+      if(!j) return null; const it=(j?.items||[])[0];
       const txt=(it?.snippet||'').replace(/<[^>]+>/g,'').trim(); if(!txt) return null;
       return pack(true,[txt],'DWDS',{score:SCORE.DWDS,ttlSec:TTL.OK});
     }catch{ return null; }
@@ -510,8 +264,8 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
   const stripTags=x=>String(x||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
   async function dicionarioAbertoDriver(term){
     try{
-      const r=await fetch('https://api.dicionario-aberto.net/word/'+encodeURIComponent(term));
-      if(!r.ok) return null; const j=await r.json(); const xml=(j?.[0]?.xml)||''; if(!xml) return null;
+      const j = await fetchJSON('https://api.dicionario-aberto.net/word/'+encodeURIComponent(term), { timeout:1500 }).catch(()=>null);
+      if(!j) return null; const xml=(j?.[0]?.xml)||''; if(!xml) return null;
       const dom=new DOMParser().parseFromString(xml,'text/xml');
       const defs=Array.from(dom.querySelectorAll('def')).map(n=>stripTags(n.textContent)).filter(Boolean).slice(0,5);
       if(!defs.length) return null; return pack(true, defs, 'Dicionário Aberto', {score:SCORE.DA,ttlSec:TTL.OK});
@@ -519,8 +273,8 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
   }
   async function tdkDriver(term){
     try{
-      const r=await fetch('https://sozluk.gov.tr/gts?ara='+encodeURIComponent(term));
-      if(!r.ok) return null; const j=await r.json();
+      const j = await fetchJSON('https://sozluk.gov.tr/gts?ara='+encodeURIComponent(term), { timeout:1500 }).catch(()=>null);
+      if(!j) return null;
       const rec=j?.[0]||j?.result?.[0]; if(!rec) return null;
       const defs=(rec.anlamlarListe||[]).map(x=>x.anlam).filter(Boolean).slice(0,5);
       if(!defs.length) return null; return pack(true, defs, 'TDK', {score:SCORE.TDK,ttlSec:TTL.OK});
@@ -530,7 +284,8 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     if(!YA_DICT_KEY) return null;
     try{
       const u=`https://dictionary.yandex.net/api/v1/dicservice.json/lookup?key=${encodeURIComponent(YA_DICT_KEY)}&lang=ru-en&text=${encodeURIComponent(term)}`;
-      const r=await fetch(u); if(!r.ok) return null; const j=await r.json();
+      const j = await fetchJSON(u, { timeout:1500 }).catch(()=>null);
+      if(!j) return null;
       const defs=(j?.def?.[0]?.tr||[]).map(t=>t.text).filter(Boolean).slice(0,5);
       if(!defs.length) return null; return pack(true, defs, 'Yandex Dictionary', {score:SCORE.YANDEX,ttlSec:TTL.OK});
     }catch{ return null; }
@@ -541,7 +296,8 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     return async function(term){
       try{
         const url=`https://${host}.wiktionary.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&format=json&origin=*&titles=${encodeURIComponent(term)}`;
-        const r=await fetch(url); if(!r.ok) return null; const j=await r.json();
+        const j = await fetchJSON(url, { timeout:1500 }).catch(()=>null);
+        if(!j) return null;
         const first=Object.values(j?.query?.pages||{})[0]; const ext=first?.extract||""; if(!ext) return null;
         const lines=ext.split("\n").map(s=>s.trim()).filter(Boolean);
         const ignore=/(IPA|Pronunciation|발음|参照|음성|語源|Etymology|^=+.*=+|\b한국어\b|\b日本語\b)/i;
@@ -577,6 +333,7 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     writeCache(key,best,best.ttlSec||TTL.OK); return best;
   }
 
+  // ---------- Thesaurus helpers ----------
   const normalizeWord=s=>String(s||'').toLowerCase().trim().match(/^[a-z][a-z-]{2,22}$/)?.[0]||'';
   function sanitizeNodeList(words, cap=24){
     const seen=new Set(), out=[];
@@ -585,14 +342,13 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
       seen.add(t); out.push({id:t,label:t}); if(out.length>=cap) break;
     } return out;
   }
-
   async function fetchThesaurusFromDatamuse(word){
     const enc=encodeURIComponent;
     const [dmSyn,dmAnt,dmML,dmTRG]=await Promise.all([
-      fetch(`https://api.datamuse.com/words?rel_syn=${enc(word)}&max=100`).then(r=>r.json()).catch(()=>[]),
-      fetch(`https://api.datamuse.com/words?rel_ant=${enc(word)}&max=100`).then(r=>r.json()).catch(()=>[]),
-      fetch(`https://api.datamuse.com/words?ml=${enc(word)}&max=100`).then(r=>r.json()).catch(()=>[]),
-      fetch(`https://api.datamuse.com/words?rel_trg=${enc(word)}&max=100`).then(r=>r.json()).catch(()=>[]),
+      fetchJSON(`https://api.datamuse.com/words?rel_syn=${enc(word)}&max=100`, { timeout:1500 }).catch(()=>[]),
+      fetchJSON(`https://api.datamuse.com/words?rel_ant=${enc(word)}&max=100`, { timeout:1500 }).catch(()=>[]),
+      fetchJSON(`https://api.datamuse.com/words?ml=${enc(word)}&max=100`,     { timeout:1500 }).catch(()=>[]),
+      fetchJSON(`https://api.datamuse.com/words?rel_trg=${enc(word)}&max=100`, { timeout:1500 }).catch(()=>[]),
     ]);
     const toWord=x=>(x&&(x.word||x.id||x.label)||'').toLowerCase().trim();
     const synNodes=sanitizeNodeList(dmSyn.map(toWord),24);
@@ -605,7 +361,7 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     return {groups};
   }
   async function fetchThesaurusFromDictApi(word){
-    const json=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`).then(r=>r.json()).catch(()=>null);
+    const json=await fetchJSON(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`, { timeout:1500 }).catch(()=>null);
     const syn=new Set(), ant=new Set();
     if(Array.isArray(json)){
       for(const e of json){
@@ -640,7 +396,7 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     return {nodes, links, _empty: !groups.length};
   }
 
-  // ---------- 3D Graph ----------
+  // ---------- 3D Graph (deferred mount) ----------
   const ensureOnceMemo=Object.create(null);
   async function ensureLibOnce(globalName, src, timeoutMs=8000){
     if(window[globalName]) return window[globalName];
@@ -735,13 +491,16 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
         return (s?.group==='center'||t?.group==='center')?60:90; });
       fg.d3Force('charge').strength(-180);
       let fitOnce=false; fg.onEngineStop(()=>{ if(!fitOnce){ fitOnce=true; fg.zoomToFit(600,60); } });
+
       const size=()=>{ fg.width(root.clientWidth).height(root.clientHeight); }; size(); addEventListener('resize', size);
 
       if(data._empty){
         show3DNotice(root,{ text:'No related words. Possibly blocked by CSP. (api.datamuse.com / dictionaryapi.dev)',
           onRetry: async()=>{ root.classList.add('loading'); const fresh=await buildGraphData(pivot||word); fg.graphData(fresh); root.classList.remove('loading');
             const wrap=root.querySelector('.vlx-hintwrap'); if(!fresh._empty&&wrap) wrap.innerHTML=''; }});
-      }else{ const wrap=root.querySelector('.vlx-hintwrap'); if(wrap) wrap.innerHTML=''; }
+      }else{
+        const wrap=root.querySelector('.vlx-hintwrap'); if(wrap) wrap.innerHTML='';
+      }
     }catch(e){
       show3DNotice(document.querySelector(container), {text:'3D library blocked by CSP/CDN', onRetry:()=>mountThesaurus3D({container,word,pivot})});
     }finally{ document.querySelector(container)?.classList.remove('loading'); }
@@ -755,6 +514,8 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     if(pos.some(p=>/adjective/i.test(p))) return isLatin?`${f} object`:f;
     return isLatin?`${f} photo`:f;
   }
+  const FILLER2=new Set(['scene','illustration','image','picture','object','thing']);
+  const pickEnglishFromDefs2=pack=>{ const txt=(pack?.defs||[]).join(' '); const hits=(txt.match(/\b[a-z]{3,}\b/gi)||[]).map(s=>s.toLowerCase()); return hits[0]||''; };
 
   async function refineImages(wordRaw, uiLang, defPack, imgs, graph, lemmaLang){
     const mode=(imgs?.mode||'').toLowerCase();
@@ -766,11 +527,11 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
 
     let phrase=hardMap[wordRaw?.toLowerCase?.()] || hardMap[wordRaw];
     if(!phrase){
-      const neighbor=(graph?.vectorNeighbors||[]).map(n=>String(n.label||'').toLowerCase()).find(l=>l&&!FILLER.has(l));
+      const neighbor=(graph?.vectorNeighbors||[]).map(n=>String(n.label||'').toLowerCase()).find(l=>l&&!FILLER2.has(l));
       if(neighbor) phrase=phraseByPOS(neighbor, defPack, neighbor);
     }
     if(!phrase && !/^[a-z]/i.test(wordRaw)){
-      const picked=pickEnglishFromDefs(defPack); if(picked) phrase=phraseByPOS(picked, defPack, picked);
+      const picked=pickEnglishFromDefs2(defPack); if(picked) phrase=phraseByPOS(picked, defPack, picked);
     }
     if(!phrase) phrase=phraseByPOS(wordRaw, defPack, wordRaw);
     phrase=phrase.replace(/\b(scene|image|picture|object|thing)\b/ig,'').replace(/\s{2,}/g,' ').trim();
@@ -782,43 +543,97 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     return { imgs, refined:false, phrase:null };
   }
 
-  async function suggestWiktionary(term, lang){
-    try{
-      const u=`https://${hostFromLang(lang)}.wiktionary.org/w/api.php?action=query&list=prefixsearch&pssearch=${encodeURIComponent(term)}&pslimit=10&format=json&origin=*`;
-      const r=await fetch(u); if(!r.ok) return []; const j=await r.json(); return (j?.query?.prefixsearch||[]).map(x=>x.title).filter(Boolean);
-    }catch{ return []; }
+  // ---------- UI Rendering ----------
+  const PLAN_URL = 'https://www.visuallexicon.org/subscription';
+  function quotaMessage(lang){
+    const L = canonLang(lang||'en');
+    if (L==='ko') return `AnySearch 이미지 미리보기는 <strong>플랜별 할당량</strong>이 적용됩니다. 사용하려면 <a href="${PLAN_URL}" target="_blank" rel="noopener">구독</a>이 필요합니다.`;
+    if (L==='ja') return `AnySearch の画像プレビューにはプランごとの <strong>クォータ</strong>が適用されます。ご利用には<a href="${PLAN_URL}" target="_blank" rel="noopener">サブスクリプション</a>が必要です。`;
+    if (L==='zh' || L==='zh-hans') return `AnySearch 图片预览受 <strong>套餐配额</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">订阅</a>。`;
+    if (L==='zh-hant') return `AnySearch 圖片預覽受 <strong>方案額度</strong>限制。使用需<a href="${PLAN_URL}" target="_blank" rel="noopener">訂閱</a>。`;
+    return `AnySearch image previews are subject to plan quotas. A <a href="${PLAN_URL}" target="_blank" rel="noopener">subscription</a> is required.`;
   }
-  const suggestDatamuse=async term=>{ try{ const r=await fetch('https://api.datamuse.com/sug?s='+encodeURIComponent(term)); if(!r.ok) return []; const j=await r.json(); return j.map(x=>x.word).filter(Boolean); }catch{ return []; } };
-  async function getSuggestions(term){
-    const lang=guessLang(term); const a=await suggestWiktionary(term, lang);
-    const b=canonLang(lang)==='en' ? (await suggestDatamuse(term)) : []; return uniq([...a, ...b]).slice(0,12);
-  }
-  function romanForDisplay(lang, word){
-    const L=canonLang(lang); if(L==='ko') return romanizeKo(word); if(L==='ja') return romanizeJa(word); return '';
-  }
-  const KO_CHO=["g","kk","n","d","tt","r","m","b","pp","s","ss","","j","jj","ch","k","t","p","h"];
-  const KO_JUNG=["a","ae","ya","yae","eo","e","yeo","ye","o","wa","wae","oe","yo","u","wo","we","wi","yu","eu","ui","i"];
-  const KO_JONG=["","k","k","k","n","n","n","t","l","k","m","p","t","t","ng","t","t","k","t","p","t","k","t","p","t","k","t","p"];
-  function romanizeKo(str){ let out=''; for(const ch of str){ const code=ch.codePointAt(0);
-    if(code>=0xAC00 && code<=0xD7A3){ const sIndex=code-0xAC00; const cho=Math.floor(sIndex/588); const jung=Math.floor((sIndex%588)/28); const jong=sIndex%28;
-      out+=(KO_CHO[cho]||'')+KO_JUNG[jung]+KO_JONG[jong]; } else out+=ch; } return out; }
-  const JA_MAP={ 'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko','さ':'sa','し':'shi','す':'su','せ':'se','そ':'so','た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to','な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no','は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho','ま':'ma','み':'mi','む':'mu','め':'me','も':'mo','や':'ya','ゆ':'yu','よ':'yo','ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro','わ':'wa','ゐ':'wi','ゑ':'we','を':'o','ん':'n' };
-  const kataToHira=s=>s.replace(/[ァ-ン]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60));
-  function romanizeJa(str){ let hira=kataToHira(str); hira=hira.replace(/っ([か-ぢつ-もやゆよら-ろわゐゑをんが-ぽ])/g,(_,n)=>{ const r=JA_MAP[n]||''; return (r[0]||'')+n; });
-    let out=''; for(let i=0;i<hira.length;i++){ const two=hira.slice(i,i+2); if(JA_MAP[two]){ out+=JA_MAP[two]; i++; continue; } const ch=hira[i];
-      if(ch==='ー'){ const prev=out[out.length-1]||''; out+=prev; continue; } out+=(JA_MAP[ch]||ch); } return out; }
 
-  function renderSuggestions(items){
-    const lang=guessLang(qEl.value.trim());
-    if(!SHOW_SUGGESTIONS || !items.length){ sugEl.style.display='none'; sugEl.innerHTML=''; return; }
-    sugEl.innerHTML=`<ul>${items.map(w=>{
-      const rom=/[가-힣ぁ-ゔァ-ヴー々〆〤一-龥]/.test(w)?romanForDisplay(lang,w):''; return `<li data-word="${esc(w)}"><span>${esc(w)}</span>${rom?`<span class="vlx-sug-roman">${esc(rom)}</span>`:''}</li>`;
-    }).join('')}</ul>`;
-    sugEl.style.display='block';
-    sugEl.querySelectorAll('li').forEach(li=>li.addEventListener('click',()=>{ qEl.value=li.dataset.word||li.textContent; hideSuggestions(); run(); }));
+  async function renderAll(word, uiLang, defPack, graph, imgs, refineInfo, antonyms, fallbackDict){
+    cardEl.style.display='block';
+    const base=imgs?.base;
+    $('vlx-word').textContent=(base&&base!==word)?`${word} (${base})`:word;
+    const ipa=defPack?.ipa || fallbackDict?.ipa || ''; const audio=defPack?.audio || fallbackDict?.ipaAudio || '';
+    $('vlx-ipa').textContent=ipa?`/${ipa.replace(/^\/|\/$/g,'')}/`:''; const audioEl=$('vlx-audio'); try{audioEl.pause();}catch{} audioEl.removeAttribute('src'); audioEl.load(); audioEl.style.display='none';
+    if(audio){ audioEl.src=audio; audioEl.style.display=''; }
+
+    const mode=String(imgs?.mode||''); const urls=(imgs?.imageUrls || (imgs?.images||[]).map(i=>i.url) || []).slice(0,MAX_IMGS);
+    $('vlx-imgs').innerHTML=urls.map(u=>`<div class="vlx-imgbox"><img src="${esc(u)}" loading="lazy" alt="${esc(word)}"></div>`).join('');
+    const caption = mode ? `image mode: ${mode}` : '';
+    const aiChip = (mode.toLowerCase().startsWith('ai') && base)?` <span class="vlx-tag">AI: ${esc(base)}</span>`:'';
+    const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase)?` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>`:'';
+    $('vlx-img-caption').innerHTML=(caption?`<span class="vlx-tag">${caption}</span>`:'')+aiChip+refinedChip;
+
+    const qNote = $('vlx-quota');
+    qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en');
+    qNote.style.display = 'inline-flex';
+
+    const modeTag=$('vlx-mode'); if(mode){ modeTag.textContent=mode; modeTag.style.display='inline-block'; } else modeTag.style.display='none';
+    const aiTag=$('vlx-ai-pair');
+    if(mode.toLowerCase().startsWith('ai') && base){ aiTag.textContent=`AI: ${base}`; aiTag.style.display='inline-block'; }
+    else if(refineInfo?.refined && refineInfo.phrase){ aiTag.textContent=`refined: ${refineInfo.phrase}`; aiTag.style.display='inline-block'; }
+    else aiTag.style.display='none';
+
+    const defs=(defPack?.defs||[]).slice(0,3);
+    const defSrc=defPack?.source ? `Source: ${defPack.source}` : '';
+    $('vlx-defs').innerHTML = defs.length? `<ul class="vlx-list">${defs.map(li).join('')}</ul>` : small('No definition found.');
+    $('vlx-def-source').innerHTML = defSrc;
+
+    const pos=defPack?.pos || [];
+    $('vlx-pos').innerHTML = pos.length? pos.map(chip).join('') : small('—');
+
+    const graphSyn=(graph?.vectorNeighbors||[]).map(n=>n.label);
+    const syn=uniq([...(defPack?.syn||[]), ...graphSyn]).slice(0,18);
+    const ant=uniq([...(defPack?.ant||[]), ...(antonyms||[])]).slice(0,16);
+    $('vlx-synant').innerHTML =
+      (syn.length? `<div><strong>Syn:</strong> ${syn.map(chip).join(' ')}</div>`:'' ) +
+      (ant.length? `<div style="margin-top:6px"><strong>Ant:</strong> ${ant.map(chip).join(' ')}</div>`:'' ) || small('—');
+
+    // Derivatives (English only-ish)
+    const showDer=/^[a-z]+$/i.test(word); const der=showDer?(()=>{
+      const s=new Set(), x=word.toLowerCase(), push=v=>v&&s.add(v);
+      push(x+'s'); push(x+'ed'); push(x+'ing'); push(x+'er'); push(x+'ers'); push(x+'ment'); push(x+'ments');
+      if(x.endsWith('y')) push(x.slice(0,-1)+'ies');
+      if(x.endsWith('e')) push(x.slice(0,-1)+'ing');
+      if(x.endsWith('ies')) push(x.slice(0,-3)+'y');
+      if(x.endsWith('es')) push(x.slice(0,-2));
+      if(x.endsWith('s')&&!x.endsWith('ss')) push(x.slice(0,-1));
+      return Array.from(s).slice(0,12);
+    })() : [];
+    $('sec-der').style.display=showDer && der.length ? '' : 'none';
+    $('vlx-der').innerHTML= showDer && der.length? der.map(chip).join('') : '';
+
+    // Examples (English UI only)
+    const isEnUI=canonLang(uiLang)==='en';
+    const ex=isEnUI ? (defPack?.examples || []) : [];
+    if(isEnUI && ex.length){ $('sec-ex').style.display=''; $('vlx-ex').innerHTML = `<ul class="vlx-list">${ex.map(li).join('')}</ul>`; }
+    else { $('sec-ex').style.display='none'; $('vlx-ex').innerHTML=''; }
+
+    // Translate pane
+    mountLangBar(); trans.currentWord=word;
+    const lemmaForTrans = (mode.startsWith('ai') && base) ? base : word;
+    renderTranslation(lemmaForTrans);
+
+    // AI disclaimer
+    const aiNote=$('vlx-ai-note');
+    aiNote.innerHTML = 'AnySearch uses AI and may occasionally produce incorrect, misleading, or biased results. Please verify important information.';
+    aiNote.style.display='inline-flex';
+
+    // 3D graph: DEFERRED (no await)
+    const DISABLE_3D = /(?:[?&#])3d=0\b/i.test(location.href);
+    if (!DISABLE_3D) {
+      const defer = window.requestIdleCallback || (fn => setTimeout(fn, 0));
+      const pivot=pickEnglishPivot(word, defPack, graph, guessLang(word));
+      defer(() => mountThesaurus3D({container:'#vlx-3d', word, pivot}));
+    }
   }
-  const hideSuggestions=()=>{ sugEl.style.display='none'; };
-  function setHTML(id, html, showIf=true){ const n=$(id); n.innerHTML=html||''; if(n.parentElement) n.parentElement.style.display=(showIf&&html)?'':'none'; }
+
+  // ---------- Translate panel ----------
   const trans={ lang:'en', mounted:false };
   function mountLangBar(){
     if(trans.mounted) return;
@@ -849,109 +664,82 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
     }catch{ box.innerHTML=small('Failed to load translation.'); }
   }
 
-  async function renderAll(word, uiLang, defPack, graph, imgs, refineInfo, antonyms, fallbackDict){
-    cardEl.style.display='block';
-    const base=imgs?.base;
-    $('vlx-word').textContent=(base&&base!==word)?`${word} (${base})`:word;
-    const ipa=defPack?.ipa || fallbackDict?.ipa || ''; const audio=defPack?.audio || fallbackDict?.ipaAudio || '';
-    $('vlx-ipa').textContent=ipa?`/${ipa.replace(/^\/|\/$/g,'')}/`:''; const audioEl=$('vlx-audio'); try{audioEl.pause();}catch{} audioEl.removeAttribute('src'); audioEl.load(); audioEl.style.display='none';
-    if(audio){ audioEl.src=audio; audioEl.style.display=''; }
-
-    const mode=String(imgs?.mode||''); const urls=(imgs?.imageUrls || (imgs?.images||[]).map(i=>i.url) || []).slice(0,MAX_IMGS);
-    $('vlx-imgs').innerHTML=urls.map(u=>`<div class="vlx-imgbox"><img src="${esc(u)}" loading="lazy" alt="${esc(word)}"></div>`).join('');
-    const caption = mode ? `image mode: ${mode}` : '';
-    const aiChip = (mode.toLowerCase().startsWith('ai') && base)?` <span class="vlx-tag">AI: ${esc(base)}</span>`:'';
-    const refinedChip = (!mode.toLowerCase().startsWith('ai') && refineInfo?.refined && refineInfo.phrase)?` <span class="vlx-tag">refined: ${esc(refineInfo.phrase)}</span>`:'';
-    $('vlx-img-caption').innerHTML=(caption?`<span class="vlx-tag">${caption}</span>`:'')+aiChip+refinedChip;
-
-    const qNote = $('vlx-quota');
-    qNote.innerHTML = quotaMessage(document.documentElement.lang || 'en');
-    qNote.style.display = 'inline-flex';
-
-    const modeTag=$('vlx-mode'); if(mode){ modeTag.textContent=mode; modeTag.style.display='inline-block'; } else modeTag.style.display='none';
-    const aiTag=$('vlx-ai-pair');
-    if(mode.toLowerCase().startsWith('ai') && base){ aiTag.textContent=`AI: ${base}`; aiTag.style.display='inline-block'; }
-    else if(refineInfo?.refined && refineInfo.phrase){ aiTag.textContent=`refined: ${refineInfo.phrase}`; aiTag.style.display='inline-block'; }
-    else aiTag.style.display='none';
-
-    const defs=(defPack?.defs||[]).slice(0,3);
-    setHTML('vlx-defs', defs.length? `<ul class="vlx-list">${defs.map(li).join('')}</ul>` : small('No definition found.'));
-    setHTML('vlx-def-source', defPack?.source ? `Source: ${defPack.source}` : '');
-
-    const pos=defPack?.pos || [];
-    setHTML('vlx-pos', pos.length? pos.map(chip).join('') : small('—'));
-
-    const graphSyn=(graph?.vectorNeighbors||[]).map(n=>n.label);
-    const syn=uniq([...(defPack?.syn||[]), ...graphSyn]).slice(0,18);
-    const ant=uniq([...(defPack?.ant||[]), ...(antonyms||[])]).slice(0,16);
-    setHTML('vlx-synant',
-      (syn.length? `<div><strong>Syn:</strong> ${syn.map(chip).join(' ')}</div>`:'' ) +
-      (ant.length? `<div style="margin-top:6px"><strong>Ant:</strong> ${ant.map(chip).join(' ')}</div>`:'' ) || small('—')
-    );
-
-    const showDer=/^[a-z]+$/i.test(word); const der=showDer?(()=>{
-      const s=new Set(), x=word.toLowerCase(), push=v=>v&&s.add(v);
-      push(x+'s'); push(x+'ed'); push(x+'ing'); push(x+'er'); push(x+'ers'); push(x+'ment'); push(x+'ments');
-      if(x.endsWith('y')) push(x.slice(0,-1)+'ies');
-      if(x.endsWith('e')) push(x.slice(0,-1)+'ing');
-      if(x.endsWith('ies')) push(x.slice(0,-3)+'y');
-      if(x.endsWith('es')) push(x.slice(0,-2));
-      if(x.endsWith('s')&&!x.endsWith('ss')) push(x.slice(0,-1));
-      return Array.from(s).slice(0,12);
-    })() : [];
-    $('sec-der').style.display=showDer && der.length ? '' : 'none';
-    setHTML('vlx-der', showDer && der.length? der.map(chip).join('') : '');
-
-    const isEnUI=canonLang(uiLang)==='en';
-    const ex=isEnUI ? (defPack?.examples || []) : [];
-    if(isEnUI && ex.length){ $('sec-ex').style.display=''; setHTML('vlx-ex', `<ul class="vlx-list">${ex.map(li).join('')}</ul>`, true); }
-    else { $('sec-ex').style.display='none'; setHTML('vlx-ex','',false); }
-
-    mountLangBar(); trans.currentWord=word;
-    const lemmaForTrans = (mode.startsWith('ai') && base) ? base : word;
-    renderTranslation(lemmaForTrans);
-
-    // AI disclaimer (English)
-    const aiNote=$('vlx-ai-note');
-    aiNote.innerHTML = 'AnySearch uses AI and may occasionally produce incorrect, misleading, or biased results. Please verify important information.';
-    aiNote.style.display='inline-flex';
-
-    const pivot=pickEnglishPivot(word, defPack, graph, guessLang(word));
-    await mountThesaurus3D({container:'#vlx-3d', word, pivot});
+  // ---------- Suggestions ----------
+  async function suggestWiktionary(term, lang){
+    try{
+      const u=`https://${hostFromLang(lang)}.wiktionary.org/w/api.php?action=query&list=prefixsearch&pssearch=${encodeURIComponent(term)}&pslimit=10&format=json&origin=*`;
+      const j = await fetchJSON(u, { timeout:1200 }).catch(()=>null);
+      return (j?.query?.prefixsearch||[]).map(x=>x.title).filter(Boolean);
+    }catch{ return []; }
   }
+  const suggestDatamuse=async term=>{
+    const j = await fetchJSON('https://api.datamuse.com/sug?s='+encodeURIComponent(term), { timeout:1200 }).catch(()=>null);
+    return (j||[]).map(x=>x.word).filter(Boolean);
+  };
+  async function getSuggestions(term){
+    const lang=guessLang(term); const a=await suggestWiktionary(term, lang);
+    const b=canonLang(lang)==='en' ? (await suggestDatamuse(term)) : []; return uniq([...a, ...b]).slice(0,12);
+  }
+  function romanForDisplay(lang, word){
+    const L=canonLang(lang); if(L==='ko') return romanizeKo(word); if(L==='ja') return romanizeJa(word); return '';
+  }
+  const KO_CHO=["g","kk","n","d","tt","r","m","b","pp","s","ss","","j","jj","ch","k","t","p","h"];
+  const KO_JUNG=["a","ae","ya","yae","eo","e","yeo","ye","o","wa","wae","oe","yo","u","wo","we","wi","yu","eu","ui","i"];
+  const KO_JONG=["","k","k","k","n","n","n","t","l","k","m","p","t","t","ng","t","t","k","t","p","t","k","t","p","t","k","t","p"];
+  function romanizeKo(str){ let out=''; for(const ch of str){ const code=ch.codePointAt(0);
+    if(code>=0xAC00 && code<=0xD7A3){ const sIndex=code-0xAC00; const cho=Math.floor(sIndex/588); const jung=Math.floor((sIndex%588)/28); const jong=sIndex%28;
+      out+=(KO_CHO[cho]||'')+KO_JUNG[jung]+KO_JONG[jong]; } else out+=ch; } return out; }
+  const JA_MAP={ 'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko','さ':'sa','し':'shi','す':'su','せ':'se','そ':'so','た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to','な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no','は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho','ま':'ma','み':'mi','む':'mu','め':'me','も':'mo','や':'ya','ゆ':'yu','よ':'yo','ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro','わ':'wa','ゐ':'wi','ゑ':'we','を':'o','ん':'n' };
+  const kataToHira=s=>s.replace(/[ァ-ン]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60));
+  function romanizeJa(str){ let hira=kataToHira(str); hira=hira.replace(/っ([か-ぢつ-もやゆよら-ろわゐゑをんが-ぽ])/g,(_,n)=>{ const r=JA_MAP[n]||''; return (r[0]||'')+n; });
+    let out=''; for(let i=0;i<hira.length;i++){ const two=hira.slice(i,i+2); if(JA_MAP[two]){ out+=JA_MAP[two]; i++; continue; } const ch=hira[i];
+      if(ch==='ー'){ const prev=out[out.length-1]||''; out+=prev; continue; } out+=(JA_MAP[ch]||ch); } return out; }
 
-  // ---------- Run ----------
+  function renderSuggestions(items){
+    const lang=guessLang(qEl.value.trim());
+    if(!SHOW_SUGGESTIONS || !items.length){ sugEl.style.display='none'; sugEl.innerHTML=''; return; }
+    sugEl.innerHTML=`<ul>${items.map(w=>{
+      const rom=/[가-힣ぁ-ゔァ-ヴー々〆〤一-龥]/.test(w)?romanForDisplay(lang,w):''; return `<li data-word="${esc(w)}"><span>${esc(w)}</span>${rom?`<span class="vlx-sug-roman">${esc(rom)}</span>`:''}</li>`;
+    }).join('')}</ul>`;
+    sugEl.style.display='block';
+    sugEl.querySelectorAll('li').forEach(li=>li.addEventListener('click',()=>{ qEl.value=li.dataset.word||li.textContent; hideSuggestions(); run(); }));
+  }
+  const hideSuggestions=()=>{ sugEl.style.display='none'; };
+
+  // ---------- Run pipeline (FAST FIRST PAINT) ----------
   async function run(){
     const raw=qEl.value.trim(); if(!raw) return;
     const uiLang=getUiLang(raw); const lemmaLang=guessLang(raw); const isEnglish=canonLang(lemmaLang)==='en';
     hideSuggestions(); spinEl.style.display='inline-block'; statusEl.textContent='Searching…'; cardEl.style.display='none';
 
-    const [imgsR, defR, graphR, dictR, antR]=await Promise.allSettled([
-      getVLImages(raw, decideImageOpts()),
-      resolveDefs(raw, lemmaLang),
-      getVLGraph(raw, lemmaLang),
-      isEnglish ? dictionaryApiDevDriver(raw) : Promise.resolve(null),
-      isEnglish ? (async()=>{ try{ const r=await fetch('https://api.datamuse.com/words?rel_ant='+encodeURIComponent(raw)); return (await r.json()).slice(0,16).map(x=>x.word).filter(Boolean);}catch{return [];} })() : Promise.resolve([])
-    ]);
+    // 핵심만 먼저(2.5s 예산)
+    const imgsP = settleWith(getVLImages(raw, decideImageOpts()), 2500, null);
+    const defsP = settleWith(resolveDefs(raw, lemmaLang),          2500, null);
+    let [imgs, defs] = await Promise.all([imgsP, defsP]);
+    imgs = imgs || {};
+    defs = defs || {};
 
-    let imgs = imgsR.status==='fulfilled' ? (imgsR.value||{}) : {};
-    const defs  = defR.status==='fulfilled' ? (defR.value||{}) : {};
-    const graph = graphR.status==='fulfilled'? (graphR.value||{}) : {};
-    const dict  = dictR.status==='fulfilled' ? (dictR.value||null): null;
-    const antonyms = antR.status==='fulfilled' ? (antR.value||[]) : [];
+    // 보조들(배경)
+    const graphP = settleWith(getVLGraph(raw, lemmaLang), 2500, {});
+    const dictP  = isEnglish ? settleWith(dictionaryApiDevDriver(raw), 1500, null) : Promise.resolve(null);
+    const antP   = isEnglish ? settleWith(fetchJSON('https://api.datamuse.com/words?rel_ant='+encodeURIComponent(raw), { timeout:1200 }).catch(()=>[]), 1500, []) : Promise.resolve([]);
 
+    // 이미지 보강(commons 재시도 + refine)
     if(IMG_MODE==='auto'){
       const noImgs = !(Array.isArray(imgs?.imageUrls)&&imgs.imageUrls.length) && !(Array.isArray(imgs?.images)&&imgs.images.length);
-      if(noImgs){ try{ const retry=await getVLImages(raw,{source:'commons'}); if((retry?.imageUrls?.length)||(retry?.images?.length)) imgs=retry; }catch{} }
+      if(noImgs){ try{ const retry=await settleWith(getVLImages(raw,{source:'commons'}), 1800, null); if((retry?.imageUrls?.length)||(retry?.images?.length)) imgs=retry; }catch{} }
     }
-
-    const refineInfo=await refineImages(raw, uiLang, defs, imgs, graph, lemmaLang); imgs=refineInfo.imgs;
+    const graph0 = await graphP.catch(()=>({}));
+    const refineInfo=await refineImages(raw, uiLang, defs, imgs, graph0, lemmaLang); imgs=refineInfo.imgs;
 
     if((!imgs?.imageUrls?.length) && (!defs?.defs?.length)){
       statusEl.innerHTML='No content returned. If this site is on a different domain than <code>api.visuallexicon.org</code>, cookies may be blocked. Use a same-origin proxy (<code>window.VLX_PROXY</code>) or set <code>window.VLX_TOKEN</code>.';
     }else statusEl.textContent='';
 
     spinEl.style.display='none';
+
+    // 배경으로 들어간 것들 수집 후 렌더
+    const [graph, dict, antonyms] = await Promise.all([graphP.catch(()=>({})), dictP.catch(()=>null), antP.catch(()=>[])]);
     renderAll(raw, uiLang, defs, graph, imgs, refineInfo, antonyms, dict);
   }
 
@@ -961,14 +749,6 @@ setTimeout(applyHeaderGap, 0); // 초기 렌더 후 한 번 더 보정
   if(AUTO_SEARCH_ON_INPUT){ qEl.addEventListener('input', debounce(()=>{ const v=qEl.value.trim(); if(v.length>=2) run(); },600)); }
   qEl.addEventListener('input', debounce(async()=>{ if(!SHOW_SUGGESTIONS) return; const v=qEl.value.trim(); if(v.length<2){ hideSuggestions(); return; } renderSuggestions(await getSuggestions(v)); },220));
   document.addEventListener('click', e=>{ if(!sugEl.contains(e.target) && e.target!==qEl) hideSuggestions(); }, true);
-  qEl.addEventListener('keydown', e=>{
-    if(sugEl.style.display!=='block') return;
-    const rows=[...sugEl.querySelectorAll('li')]; if(!rows.length) return;
-    const i=rows.findIndex(li=>li.classList.contains('active'));
-    if(e.key==='ArrowDown'){ e.preventDefault(); const ni=Math.min(rows.length-1, i+1); rows.forEach(r=>r.classList.remove('active')); rows[ni].classList.add('active'); rows[ni].scrollIntoView({block:'nearest'}); }
-    else if(e.key==='ArrowUp'){ e.preventDefault(); const ni=Math.max(0, i-1); rows.forEach(r=>r.classList.remove('active')); rows[ni].classList.add('active'); rows[ni].scrollIntoView({block:'nearest'}); }
-    else if(e.key==='Enter' && i>=0){ e.preventDefault(); qEl.value=rows[i].dataset.word||rows[i].textContent; hideSuggestions(); run(); }
-  });
+
 })();
 </script>
-</html>
