@@ -55,6 +55,13 @@
 .vlx-quota{display:none;margin-top:8px}
 .vlx-quota.toast{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--vlx-border);border-radius:10px;padding:8px 10px;box-shadow:var(--vlx-shadow)}
 
+  /* narrow layout fix */
+  @media (max-width:640px){
+    .vlx-row{flex-wrap:wrap}
+    .vlx-row .vlx-input{flex:1 1 220px;min-width:0}
+    .vlx-row .vlx-btn{flex:1 0 160px;margin-top:8px}
+  }
+
 </style>
 
 <div class="vlx-wrap">
